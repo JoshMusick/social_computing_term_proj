@@ -35,29 +35,25 @@ public class InputParserUtility {
 
 		List<Person> men = new ArrayList<Person>();
 		List<Person> women = new ArrayList<Person>();
-		for (int i = 0; i < lines.size(); i = i + 2) {
-			men.add(new Person());
-			women.add(new Person());
+		for (int i = 0; i < lines.size() / 2; i++) {
+			men.add(new Person(i));
+			women.add(new Person(i));
 		}
-
 
 		List<List<Integer>> preferenceLists = lines.stream() //
 				.map(line -> Arrays.stream(line.split("\\s+")) //
-						.map(Integer::valueOf) //convert Strings to Integers
+						.map(Integer::valueOf) // convert Strings to Integers
+						.map(val -> val - 1) // switch to zero based index
 						.collect(Collectors.toList())) //
 				.collect(Collectors.toList());
 
 		for (Person man : men) {
-			List<Person> preferenceList = preferenceLists.remove(0).stream() //
-					.map(index -> women.get(index - 1)) //
-					.collect(Collectors.toList());
+			List<Integer> preferenceList = preferenceLists.remove(0);
 			man.setPreferenceList(preferenceList);
 		}
 
 		for (Person woman : women) {
-			List<Person> preferenceList = preferenceLists.remove(0).stream() //
-					.map(index -> men.get(index - 1)) //
-					.collect(Collectors.toList());
+			List<Integer> preferenceList = preferenceLists.remove(0);
 			woman.setPreferenceList(preferenceList);
 		}
 

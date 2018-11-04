@@ -1,39 +1,17 @@
 import java.util.LinkedList;
 import java.util.List;
 
-public class SMP {
+public class GaleShapelyAlgorithm {
 
-	public static void main(String[] args) {
-		if (args.length < 2) {
-			System.out.println("usage: SMP <input> <m/w>\n");
-			return;
-		}
-		List<List<Person>> groups = InputParserUtility.ParseInput(args[0]);
-
-		if (args[1].equalsIgnoreCase("m")) {
+	public static List<List<Person>> execute(List<List<Person>> groups, String gender) {
+		if (gender.equalsIgnoreCase("m")) {
 			executeGSAlgorithm(groups, true);
-			printOutput(groups, true);
+//			StableMatchingUtils.printOutput(groups, true);
 		} else {
 			executeGSAlgorithm(groups, false);
-			printOutput(groups, false);
+//			StableMatchingUtils.printOutput(groups, false);
 		}
-
-	}
-
-	private static void printOutput(List<List<Person>> matchedPeople, boolean menFirst) {
-		List<Person> men = matchedPeople.get(0);
-		List<Person> women = matchedPeople.get(1);
-		for (int i = 0; i < men.size(); i++) {
-			int matchIndex;
-			if (menFirst) {
-				Person match = men.get(i).getMatch();
-				matchIndex = women.indexOf(match);
-			} else {
-				Person match = women.get(i).getMatch();
-				matchIndex = men.indexOf(match);
-			}
-			System.out.println("(" + (i + 1) + ", " + (matchIndex + 1) + ")");
-		}
+		return groups;
 	}
 
 	private static void executeGSAlgorithm(List<List<Person>> groups, boolean manOptimal) {
@@ -62,20 +40,22 @@ public class SMP {
 		int preferenceListIndex = 0;
 
 		if (proposer.getLastRejected() != null) {
-			preferenceListIndex = proposer.getPreferenceList().indexOf(proposer.getLastRejected()) + 1;
+			preferenceListIndex = proposer.getPreferenceList().indexOf(proposer.getLastRejected().getPosition()) + 1;
 		}
 
-		Person possibleMatch = proposer.getPreferenceList().get(preferenceListIndex);
+		Integer possibleMatchIndex = proposer.getPreferenceList().get(preferenceListIndex);
+		Person possibleMatch = receivingGroup.get(possibleMatchIndex);
 		while (proposer.getMatch() == null) {
 			if (propose(proposer, possibleMatch)) {
 				proposer.setMatch(possibleMatch);
 				return possibleMatch;
 			} else {
 				preferenceListIndex++;
-				possibleMatch = proposer.getPreferenceList().get(preferenceListIndex);
+				possibleMatchIndex = proposer.getPreferenceList().get(preferenceListIndex);
+				possibleMatch = receivingGroup.get(possibleMatchIndex);
 			}
 		}
-		//should never get here
+		// should never get here
 		return null;
 	}
 
@@ -90,6 +70,4 @@ public class SMP {
 		}
 		return false;
 	}
-
-
 }
