@@ -63,13 +63,13 @@ public class FairMatching {
 		trimSingleFeasible();
 		
 		// Print the curretly possible Preference pairs
-		PrintPrefPossible();
+		PrintPrefPossible(true);
 		
 		// Trim options which are not feasible from the opposite group
 		trimOppositeGroupFeasible();
 		
 		// Print the curretly possible Preference pairs
-		PrintPrefPossible();
+		PrintPrefPossible(false);
 	}
 	
 	public void trimOppositeGroupFeasible()
@@ -170,18 +170,18 @@ public class FairMatching {
 		
 	}
 
-	private void PrintPrefPossible()
+	private void PrintPrefPossible(boolean printFullPrefs)
 	{
-		PrintGroupPrefPossible(menGroup, "M");
-		PrintGroupPrefPossible(womenGroup, "F");
+		PrintGroupPrefPossible(menGroup, "M", printFullPrefs);
+		PrintGroupPrefPossible(womenGroup, "F", printFullPrefs);
 	}
 	
-	private void PrintGroupPrefPossible(List<Person> grp, String gend)
+	private void PrintGroupPrefPossible(List<Person> grp, String gend, boolean printFullPrefs)
 	{
 		System.out.println("Feasible Preferences for all " + gend);
 		for (Person p : grp) {
 			int index = p.getPosition();
-			System.out.println(gend + index + " pref: " + p.getPreferenceList() + " feas: " + p.getFeasiblePreferences());
+			System.out.println(gend + index + (printFullPrefs ? " pref: " + p.getPreferenceList() : "" ) + " feas: " + p.getFeasiblePreferences());
 		}
 	}
 	
