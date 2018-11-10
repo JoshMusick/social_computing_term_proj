@@ -36,8 +36,8 @@ public class InputParserUtility {
 		List<Person> men = new ArrayList<Person>();
 		List<Person> women = new ArrayList<Person>();
 		for (int i = 0; i < lines.size() / 2; i++) {
-			men.add(new Person(i));
-			women.add(new Person(i));
+			men.add(new Person(i, true));
+			women.add(new Person(i, false));
 		}
 
 		List<List<Integer>> preferenceLists = lines.stream() //

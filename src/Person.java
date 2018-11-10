@@ -11,9 +11,16 @@ public class Person implements Cloneable {
 	private Person lastRejected;
 	private int position;
 	private Set<Integer> feasibleMatches = Set.of();
+	
+	private boolean isMale;
 
-	public Person(int position) {
+	public Person(int position, boolean isMale) {
 		this.position = position;
+		this.isMale = isMale;
+	}
+	
+	public boolean GetIsMale() {
+		return this.isMale;
 	}
 
 	public List<Integer> getPreferenceList() {
@@ -54,6 +61,10 @@ public class Person implements Cloneable {
 	public boolean prefers(Person personA, Person personB) {
 		return preferenceList.indexOf(personA.position) < preferenceList.indexOf(personB.position);
 	}
+	
+	public int getPreferenceWeight(Person p) {
+		return preferenceList.indexOf(p);
+	}
 
 	public int getPosition() {
 		return position;
@@ -80,7 +91,7 @@ public class Person implements Cloneable {
 	}
 
 	public Person clone(Person person) {
-		Person clone = new Person(this.position);
+		Person clone = new Person(this.position, this.isMale);
 		clone.feasibleMatches = new HashSet<Integer>(this.feasibleMatches);
 		clone.lastRejected = this.lastRejected;
 		clone.match = this.match;

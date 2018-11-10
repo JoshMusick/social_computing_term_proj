@@ -34,8 +34,14 @@ public class StableMatchingUtils {
 		}
 		return false;
 	}
-
+	
 	public static void printOutput(List<List<Person>> matchedPeople, boolean menFirst) {
+		printOutput(matchedPeople, menFirst, true);
+	}
+	
+	public static void printOutput(List<List<Person>> matchedPeople, boolean menFirst, boolean addOne) {
+
+		int offset = addOne ? 1 : 0;
 		List<Person> men = matchedPeople.get(0);
 		List<Person> women = matchedPeople.get(1);
 		for (int i = 0; i < men.size(); i++) {
@@ -47,7 +53,7 @@ public class StableMatchingUtils {
 				Person match = women.get(i).getMatch();
 				matchIndex = men.indexOf(match);
 			}
-			System.out.println("(" + (i + 1) + ", " + (matchIndex + 1) + ")");
+			System.out.println("(" + (i + offset) + ", " + (matchIndex + offset) + ")");
 		}
 	}
 }
