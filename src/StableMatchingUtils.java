@@ -2,9 +2,9 @@ import java.util.List;
 
 public class StableMatchingUtils {
 
-	public static boolean checkStableMatching(List<List<Person>> people) {
-		List<Person> men = people.get(0);
-		List<Person> women = people.get(1);
+	public static boolean checkStableMatching(Matching people) {
+		List<Person> men = people.getMen();
+		List<Person> women = people.getWomen();
 		for (Person man : men) {
 			if (hasBlockingPair(man, women)) {
 				return false;
@@ -35,15 +35,15 @@ public class StableMatchingUtils {
 		return false;
 	}
 	
-	public static void printOutput(List<List<Person>> matchedPeople, boolean menFirst) {
+	public static void printOutput(Matching matchedPeople, boolean menFirst) {
 		printOutput(matchedPeople, menFirst, true);
 	}
 	
-	public static void printOutput(List<List<Person>> matchedPeople, boolean menFirst, boolean addOne) {
+	public static void printOutput(Matching matchedPeople, boolean menFirst, boolean addOne) {
 
 		int offset = addOne ? 1 : 0;
-		List<Person> men = matchedPeople.get(0);
-		List<Person> women = matchedPeople.get(1);
+		List<Person> men = matchedPeople.getMen();
+		List<Person> women = matchedPeople.getWomen();
 		for (int i = 0; i < men.size(); i++) {
 			int matchIndex;
 			if (menFirst) {
@@ -57,12 +57,34 @@ public class StableMatchingUtils {
 		}
 	}
 
-	public static void printReducedPreferenceLists(List<List<Person>> groups) {
-		for (List<Person> group : groups) {
-			for (int i = 0; i < group.size(); i++) {
-				Person p = group.get(i);
-				System.out.println( i + " " + p.getFeasiblePreferences());
-			}
+	public static void printReducedPreferenceLists(Matching groups) {
+		for (int i = 0; i < groups.getMen().size(); i++) {
+			Person p = groups.getMen().get(i);
+			System.out.println( i + " " + p.getFeasiblePreferences());
 		}
+		for (int i = 0; i < groups.getWomen().size(); i++) {
+			Person p = groups.getWomen().get(i);
+			System.out.println( i + " " + p.getFeasiblePreferences());
+		}
+	}
+
+	public static Long calculateEquityScore(Matching match) {
+		List<Person> men = match.getMen();
+		List<Person> women = match.getWomen();
+		Long equity = 0L;
+		equity = men.stream() //
+				.map(man -> calculatePreferenceScore(man, women)).reduce(0L, (a, b) -> a + b);
+		equity += women.stream() //
+				.map(woman -> calculatePreferenceScore(woman, men)).reduce(0L, (a, b) -> a + b);
+		return equity;
+	}
+
+	public static Long calculatePreferenceScore(Person person, List<Person> preferenceGroup) {
+		Integer matchIndex = preferenceGroup.indexOf(person.getMatch());
+		if (matchIndex < 0) {
+			throw new RuntimeException("invalid match");
+		}
+		Integer preferenceListIndex = person.getPreferenceList().indexOf(matchIndex);
+		return preferenceListIndex.longValue();
 	}
 }

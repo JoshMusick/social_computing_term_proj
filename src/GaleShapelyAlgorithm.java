@@ -3,7 +3,7 @@ import java.util.List;
 
 public class GaleShapelyAlgorithm {
 
-	public static List<List<Person>> execute(List<List<Person>> groups, String gender) {
+	public static Matching execute(Matching groups, String gender) {
 		if (gender.equalsIgnoreCase("m")) {
 			executeGSAlgorithm(groups, true);
 //			StableMatchingUtils.printOutput(groups, true);
@@ -14,15 +14,15 @@ public class GaleShapelyAlgorithm {
 		return groups;
 	}
 
-	private static void executeGSAlgorithm(List<List<Person>> groups, boolean manOptimal) {
+	private static void executeGSAlgorithm(Matching groups, boolean manOptimal) {
 		List<Person> proposingGroup;
 		List<Person> receivingGroup;
 		if (manOptimal) {
-			proposingGroup = groups.get(0);
-			receivingGroup = groups.get(1);
+			proposingGroup = groups.getMen();
+			receivingGroup = groups.getWomen();
 		} else {
-			proposingGroup = groups.get(1);
-			receivingGroup = groups.get(0);
+			proposingGroup = groups.getWomen();
+			receivingGroup = groups.getMen();
 		}
 
 		LinkedList<Person> queue = new LinkedList<Person>(proposingGroup);

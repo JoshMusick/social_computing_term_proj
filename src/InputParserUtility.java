@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 
 public class InputParserUtility {
 
-	public static List<List<Person>> ParseInput(String filename) {
+	public static Matching ParseInput(String filename) {
 		File inputFile = new File(filename);
 		if (!inputFile.canRead()) {
 			System.out.println("cannot read input file: " + inputFile.getName());
@@ -22,7 +22,7 @@ public class InputParserUtility {
 		}
 	}
 
-	private static List<List<Person>> parseInput(final List<String> inputLines) throws Exception {
+	private static Matching parseInput(final List<String> inputLines) throws Exception {
 
 		List<String> lines = inputLines.stream() //
 				.map(line -> line.replaceAll("^\\s+", "")) // remove leading spaces
@@ -57,8 +57,6 @@ public class InputParserUtility {
 			woman.setPreferenceList(preferenceList);
 		}
 
-		List<List<Person>> groups = List.of(men, women);
-
-		return groups;
+		return new Matching(men, women);
 	}
 }

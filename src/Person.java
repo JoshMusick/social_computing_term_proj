@@ -90,7 +90,7 @@ public class Person implements Cloneable {
 		return Objects.hash(position);
 	}
 
-	public Person clone(Person person) {
+	public Person clone() {
 		Person clone = new Person(this.position, this.isMale);
 		clone.feasibleMatches = new HashSet<Integer>(this.feasibleMatches);
 		clone.lastRejected = this.lastRejected;

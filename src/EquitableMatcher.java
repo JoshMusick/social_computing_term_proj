@@ -3,12 +3,11 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class EquitableMatcher {
 
 	private Long bestMatchValue = Long.MAX_VALUE;
-	private List<List<Person>> bestMatch = null;
+	private Matching bestMatch = null;
 	private Integer numberOfMatchings = 0;
 	Set<List<Integer>> matchLattice = new HashSet<List<Integer>>();
 
@@ -23,54 +22,90 @@ public class EquitableMatcher {
 
 	private void match(String filename) {
 
-		List<List<Person>> groups = InputParserUtility.ParseInput(filename);
-		List<List<Person>> manOptimalMatch = GaleShapelyAlgorithm.execute(cloneGroups(groups), "m");
-		List<List<Person>> womanOptimalMatch = GaleShapelyAlgorithm.execute(cloneGroups(groups), "w");
+		Matching unPairedMatching = InputParserUtility.ParseInput(filename);
+		Matching manOptimalMatch = GaleShapelyAlgorithm.execute(unPairedMatching.clone(), "m");
+		Matching womanOptimalMatch = GaleShapelyAlgorithm.execute(unPairedMatching.clone(), "w");
 
-		Long equityScore = calculateEquityScore(manOptimalMatch);
+		Long equityScore = StableMatchingUtils.calculateEquityScore(manOptimalMatch);
 		System.out.println("Man-optimal equity score: " + equityScore);
-		equityScore = calculateEquityScore(womanOptimalMatch);
+		equityScore = StableMatchingUtils.calculateEquityScore(womanOptimalMatch);
 		System.out.println("Woman-optimal equity score: " + equityScore);
 
-		List<List<Person>> nonFeasiblePairs = findNonFeasiblePairs(manOptimalMatch, manOptimalMatch, womanOptimalMatch);
-		removeNonFeasiblePairs(manOptimalMatch, nonFeasiblePairs);
+		//TODO: combine these into one method
+		List<List<Person>> nonFeasiblePairs = findNonFeasiblePairs(manOptimalMatch, womanOptimalMatch);
+		removeNonFeasiblePairs(nonFeasiblePairs);
 
 		StableMatchingUtils.printReducedPreferenceLists(manOptimalMatch);
 
-//		matchings.forEach(System.out::println);
-		StableMatchingUtils.printOutput(manOptimalMatch, true);
 		matchLattice = findAllMatchings(manOptimalMatch);
 
-
-//		findMostEquitableMatch(groups);
-//
-//		equityScore = calculateEquityScore(bestMatch);
-//		System.out.println("Optimal matching:");
-//		StableMatchingUtils.printOutput(bestMatch, true);
-//		System.out.println("Total matchings: " + numberOfMatchings + " Optimal equity score: " + equityScore);
+		System.out.println("Optimal matching:");
+		StableMatchingUtils.printOutput(bestMatch, true);
+		System.out.println("Total matchings: " + numberOfMatchings + " Optimal equity score: " + equityScore);
 
 	}
 
-	private Set<List<Integer>> findAllMatchings(List<List<Person>> matching) {
+	private Set<List<Integer>> findAllMatchings(Matching baseMatching) {
 		Set<List<Integer>> returnVal = new HashSet<List<Integer>>();
 
-		List<Integer> matchId = identifyMatching(matching);
+		List<Integer> matchId = baseMatching.getMatchingId();
 		if (matchLattice.contains(matchId)) {
 			return returnVal;
 		}
 
-		for (Rotation rotation : identifyRotations(matching)) {
-//			List<List<Person>> rotatedMatch = getRotatedMatch(matching, rotation);
-//			returnVal.addAll(findAllMatchings(rotatedMatch));
+		//If we get here, then we've identified a new matching!
+		evaluateMatching(baseMatching);
+
+		for (Rotation rotation : identifyRotations(baseMatching)) {
+			Matching rotatedMatch = getRotatedMatch(baseMatching, rotation);
+			returnVal.addAll(findAllMatchings(rotatedMatch));
 		}
-		return null;
+		return returnVal;
 	}
 
-	private List<Rotation> identifyRotations(List<List<Person>> matching) {
+	private Matching getRotatedMatch(Matching matching, Rotation rotation) {
+		Matching rotatedMatching = matching.clone();
+		List<Person> men = rotatedMatching.getMen();
+		List<Person> women = rotatedMatching.getWomen();
+		for (Integer index : rotation.getRotation()) {
+			Person man = men.get(index);
+			List<Integer> reducedPreferenceList = man.getFeasiblePreferences();
+			Integer currentMatchIndex = reducedPreferenceList.get(0);
+			Integer rotatedMatchIndex = reducedPreferenceList.get(1);
+			Person rotatedMatch = women.get(rotatedMatchIndex);
+			man.markInfeasible(currentMatchIndex);
+			man.setMatch(rotatedMatch);
+			rotatedMatch.setMatch(man);
+		}
+		//rotated matches have improved their matching. Let's make sure to mark any pairs below a womens' current matches as infeasible
+		updateFeasibility(rotatedMatching);
+		return rotatedMatching;
+	}
+
+	private void updateFeasibility(Matching rotatedMatching) {
+		List<Person> men = rotatedMatching.getMen();
+		List<Person> women = rotatedMatching.getWomen();
+
+		for (Person woman : women) {
+			boolean feasible = true;
+			for (Integer position : woman.getFeasiblePreferences()) {
+				if (!feasible) {
+					Person man = men.get(position);
+					woman.markInfeasible(position);
+					man.markInfeasible(woman.getPosition());
+				}
+				if (position.equals(woman.getMatch().getPosition())) {
+					feasible = false;
+				}
+			}
+		}
+	}
+
+	private List<Rotation> identifyRotations(Matching matching) {
 		Set<Integer> visitedMatches = new HashSet<Integer>();
 		List<Rotation> rotations = new ArrayList<Rotation>();
-		List<Person> men = matching.get(0);
-		List<Person> women = matching.get(1);
+		List<Person> men = matching.getMen();
+		List<Person> women = matching.getWomen();
 		for (int i = 0; i < men.size(); i++) {
 			if (visitedMatches.contains(i)) {
 				continue;
@@ -113,7 +148,6 @@ public class EquitableMatcher {
 			potentialRotation.add(index);
 
 		}
-		System.out.println("potential: " + potentialRotation);
 		return rotationOf(potentialRotation);
 	}
 
@@ -125,31 +159,11 @@ public class EquitableMatcher {
 		Integer cycle = potentialRotation.get(potentialRotation.size() - 1);
 		Integer firstOccurance = potentialRotation.indexOf(cycle);
 		List<Integer> rotation = potentialRotation.subList(firstOccurance, potentialRotation.size() - 1);
-		System.out.println("rotation: " + rotation);
-		
+		result.setRotation(rotation);
 		return result;
 	}
 
-	/**
-	 * For a man M, matched with woman W, let p(M,W) be the index W in the
-	 * preference list of M. Let a matching be identified as a list of p(M,W). Each
-	 * matching has a unique identification in this way and the set of these
-	 * matchings form a poset.
-	 */
-	private List<Integer> identifyMatching(List<List<Person>> manOptimalMatch) {
-		List<Person> men = manOptimalMatch.get(0);
-		List<Integer> matching = new ArrayList<Integer>();
-		for (Person man : men) {
-			Person match = man.getMatch();
-			Integer matchPosition = man.getPreferenceList().indexOf(match.getPosition());
-			matching.add(matchPosition);
-		}
-		return matching;
-	}
-
-	private void removeNonFeasiblePairs(List<List<Person>> groups, List<List<Person>> nonFeasiblePairs) {
-		List<Person> men = groups.get(0);
-		List<Person> women = groups.get(1);
+	private void removeNonFeasiblePairs(List<List<Person>> nonFeasiblePairs) {
 		for (List<Person> pair : nonFeasiblePairs) {
 			Person man = pair.get(0);
 			Person woman = pair.get(1);
@@ -158,71 +172,22 @@ public class EquitableMatcher {
 		}
 	}
 
-	private void findMostEquitableMatch(List<List<Person>> input) {
-		bestMatchValue = Long.MAX_VALUE;
-		bestMatch = null;
-		numberOfMatchings = 0;
-		findMostEquitableMatch(input.get(0).size(), input);
-	}
-
-	private void findMostEquitableMatch(Integer unmatchedCount, List<List<Person>> input) {
-		// base case: unmatched list is empty:
-		if (unmatchedCount == 0) {
-			if (!StableMatchingUtils.checkStableMatching(input)) {
-//				System.out.println("non stable!");
-				return;
-			 }
-			numberOfMatchings++;
-			Long equityScore = calculateEquityScore(input);
-			System.out.println("equity score: " + equityScore);
-			if (equityScore < bestMatchValue) {
-				bestMatchValue = equityScore;
-				bestMatch = input;
-			}
-			return;
-		}
-
-		// recursive case:
-		List<List<Person>> traversal = cloneGroups(input);
-		List<Person> availableMen = traversal.get(0);
-		List<Person> availableWomen = traversal.get(1);
-		Person availableMan = availableMen.get(availableMen.size() - unmatchedCount);
-		List<Integer> feasibleMatches = availableMan.getFeasiblePreferences();
-		for (Integer feasibleMatchIndex : feasibleMatches) {
-			Person feasibleWoman = availableWomen.get(feasibleMatchIndex);
-			// is this match still in the list of available options?
-			if (feasibleWoman.getMatch() != null) {
-				continue;
-			}
-			availableMan.setMatch(feasibleWoman);
-			feasibleWoman.setMatch(availableMan);
-			findMostEquitableMatch(unmatchedCount - 1, cloneGroups(traversal));
-			availableMan.setMatch(null);
-			feasibleWoman.setMatch(null);
-		}
-
-	}
-
-	private List<List<Person>> findNonFeasiblePairs(List<List<Person>> groups, List<List<Person>> manOptimalMatch,
-			List<List<Person>> womanOptimalMatch) {
-		List<Person> men = groups.get(0);
-		List<Person> women = groups.get(1);
-		List<Person> menOptimal = manOptimalMatch.get(0);
-		List<Person> menPessimal = womanOptimalMatch.get(0);
-		List<Person> womenOptimal = womanOptimalMatch.get(1);
-		List<Person> womenPessimal = manOptimalMatch.get(1);
+	private List<List<Person>> findNonFeasiblePairs(Matching manOptimalMatch, Matching womanOptimalMatch) {
+		List<Person> menOptimal = manOptimalMatch.getMen();
+		List<Person> menPessimal = womanOptimalMatch.getMen();
+		List<Person> womenOptimal = womanOptimalMatch.getWomen();
+		List<Person> womenPessimal = manOptimalMatch.getWomen();
 
 		List<List<Person>>nonFeasiblePairs = new ArrayList<List<Person>>();
-		nonFeasiblePairs.addAll(findNonFeasiblePairsByGender(men, women, menOptimal, menPessimal, true));
-		nonFeasiblePairs.addAll(findNonFeasiblePairsByGender(women, men, womenOptimal, womenPessimal, false));
+		nonFeasiblePairs.addAll(findNonFeasiblePairsByGender(menOptimal, menPessimal, womenPessimal, true));
+		nonFeasiblePairs.addAll(findNonFeasiblePairsByGender(womenOptimal, womenPessimal, menOptimal, false));
 		return nonFeasiblePairs;
 	}
 
-	private List<List<Person>> findNonFeasiblePairsByGender(List<Person> groupA, List<Person> groupB, List<Person> aOptimal,
-			List<Person> aPessimal, boolean man) {
+	private List<List<Person>> findNonFeasiblePairsByGender(List<Person> aOptimal, List<Person> aPessimal, List<Person> groupB, boolean man) {
 		List<List<Person>>nonFeasiblePairs = new ArrayList<List<Person>>();
-		for (int personIndex = 0; personIndex < groupA.size(); personIndex++) {
-			Person person = groupA.get(personIndex);
+		for (int personIndex = 0; personIndex < aOptimal.size(); personIndex++) {
+			Person person = aOptimal.get(personIndex);
 			Person optimalMatch = aOptimal.get(personIndex).getMatch();
 			Person pessimalMatch = aPessimal.get(personIndex).getMatch();
 			Integer optimalMatchIndex = groupB.indexOf(optimalMatch);
@@ -255,32 +220,17 @@ public class EquitableMatcher {
 		return nonFeasiblePairs;
 	}
 
-	private Long calculateEquityScore(List<List<Person>> match) {
-		List<Person> men = match.get(0);
-		List<Person> women = match.get(1);
-		Long equity = 0L;
-		equity = men.stream() //
-				.map(man -> calculatePreferenceScore(man, women)).reduce(0L, (a, b) -> a + b);
-		equity += women.stream() //
-				.map(woman -> calculatePreferenceScore(woman, men)).reduce(0L, (a, b) -> a + b);
-		return equity;
-	}
-
-	private Long calculatePreferenceScore(Person person, List<Person> preferenceGroup) {
-		Integer matchIndex = preferenceGroup.indexOf(person.getMatch());
-		if (matchIndex < 0) {
-			throw new RuntimeException("invalid match");
+	private void evaluateMatching(Matching matching) {
+		numberOfMatchings++;
+		Long equityScore = StableMatchingUtils.calculateEquityScore(matching);
+		System.out.println("matching: " + matching.getMatchingId() + "equity score: " + equityScore);
+		if (equityScore < bestMatchValue) {
+			bestMatchValue = equityScore;
+			bestMatch = matching;
 		}
-		Integer preferenceListIndex = person.getPreferenceList().indexOf(matchIndex);
-		return preferenceListIndex.longValue();
+		return;
 	}
 
-	private List<List<Person>> cloneGroups(List<List<Person>> groups) {
-		return groups.stream() //
-				.map(personList -> personList.stream() //
-						.map(person -> person.clone(person)) //
-						.collect(Collectors.toList())) //
-				.collect(Collectors.toList());
-	}
+
 
 }
