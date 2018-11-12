@@ -26,11 +26,6 @@ public class EquitableMatcher {
 		Matching manOptimalMatch = GaleShapelyAlgorithm.execute(unPairedMatching.clone(), "m");
 		Matching womanOptimalMatch = GaleShapelyAlgorithm.execute(unPairedMatching.clone(), "w");
 
-		Long equityScore = StableMatchingUtils.calculateEquityScore(manOptimalMatch);
-		System.out.println("Man-optimal equity score: " + equityScore);
-		equityScore = StableMatchingUtils.calculateEquityScore(womanOptimalMatch);
-		System.out.println("Woman-optimal equity score: " + equityScore);
-
 		//TODO: combine these into one method
 		List<List<Person>> nonFeasiblePairs = findNonFeasiblePairs(manOptimalMatch, womanOptimalMatch);
 		removeNonFeasiblePairs(nonFeasiblePairs);
@@ -39,9 +34,13 @@ public class EquitableMatcher {
 
 		matchLattice = findAllMatchings(manOptimalMatch);
 
+		Long equityScore = StableMatchingUtils.calculateEquityScore(manOptimalMatch);
+		System.out.println("Man-optimal equity score: " + equityScore);
+		equityScore = StableMatchingUtils.calculateEquityScore(womanOptimalMatch);
+		System.out.println("Woman-optimal equity score: " + equityScore);
 		System.out.println("Optimal matching:");
 		StableMatchingUtils.printOutput(bestMatch, true);
-		System.out.println("Total matchings: " + numberOfMatchings + " Optimal equity score: " + equityScore);
+		System.out.println("Total matchings: " + numberOfMatchings + " Optimal equity score: " + bestMatchValue);
 
 	}
 
@@ -226,6 +225,7 @@ public class EquitableMatcher {
 		System.out.println("matching: " + matching.getMatchingId() + "equity score: " + equityScore);
 		if (equityScore < bestMatchValue) {
 			bestMatchValue = equityScore;
+			System.out.println("better match found! new best: " + bestMatchValue);
 			bestMatch = matching;
 		}
 		return;
