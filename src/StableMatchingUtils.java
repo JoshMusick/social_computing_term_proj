@@ -56,4 +56,13 @@ public class StableMatchingUtils {
 			System.out.println("(" + (i + offset) + ", " + (matchIndex + offset) + ")");
 		}
 	}
+
+	public static void printReducedPreferenceLists(List<List<Person>> groups) {
+		for (List<Person> group : groups) {
+			for (int i = 0; i < group.size(); i++) {
+				Person p = group.get(i);
+				System.out.println( i + " " + p.getFeasiblePreferences());
+			}
+		}
+	}
 }
