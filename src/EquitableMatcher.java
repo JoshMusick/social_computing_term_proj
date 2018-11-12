@@ -26,9 +26,9 @@ public class EquitableMatcher {
 		Matching manOptimalMatch = GaleShapelyAlgorithm.execute(unPairedMatching.clone(), "m");
 		Matching womanOptimalMatch = GaleShapelyAlgorithm.execute(unPairedMatching.clone(), "w");
 
-		//TODO: combine these into one method
-		List<List<Person>> nonFeasiblePairs = findNonFeasiblePairs(manOptimalMatch, womanOptimalMatch);
-		removeNonFeasiblePairs(nonFeasiblePairs);
+		// TODO: combine these into one method
+		List<List<Integer>> nonFeasiblePairs = findNonFeasiblePairs(manOptimalMatch, womanOptimalMatch);
+		removeNonFeasiblePairs(nonFeasiblePairs, manOptimalMatch);
 
 		StableMatchingUtils.printReducedPreferenceLists(manOptimalMatch);
 
@@ -52,7 +52,7 @@ public class EquitableMatcher {
 			return returnVal;
 		}
 
-		//If we get here, then we've identified a new matching!
+		// If we get here, then we've identified a new matching!
 		evaluateMatching(baseMatching);
 
 		for (Rotation rotation : identifyRotations(baseMatching)) {
@@ -76,7 +76,8 @@ public class EquitableMatcher {
 			man.setMatch(rotatedMatch);
 			rotatedMatch.setMatch(man);
 		}
-		//rotated matches have improved their matching. Let's make sure to mark any pairs below a womens' current matches as infeasible
+		// rotated matches have improved their matching. Let's make sure to mark any
+		// pairs below a womens' current matches as infeasible
 		updateFeasibility(rotatedMatching);
 		return rotatedMatching;
 	}
@@ -123,7 +124,7 @@ public class EquitableMatcher {
 		boolean rotationFound = false;
 		while (!rotationFound) {
 			if (visitedMatches.contains(index)) {
-				//we've already checked this index.
+				// we've already checked this index.
 				potentialRotation = null;
 				break;
 			}
@@ -133,7 +134,7 @@ public class EquitableMatcher {
 			List<Integer> reducedPreferenceList = man.getFeasiblePreferences();
 			Integer currentMatchIndex = reducedPreferenceList.indexOf(matchId);
 			if (currentMatchIndex.equals(reducedPreferenceList.size() - 1)) {
-				//no other match possibilities for this man. No rotation;
+				// no other match possibilities for this man. No rotation;
 				potentialRotation = null;
 				break;
 			}
@@ -162,43 +163,48 @@ public class EquitableMatcher {
 		return result;
 	}
 
-	private void removeNonFeasiblePairs(List<List<Person>> nonFeasiblePairs) {
-		for (List<Person> pair : nonFeasiblePairs) {
-			Person man = pair.get(0);
-			Person woman = pair.get(1);
+	private void removeNonFeasiblePairs(List<List<Integer>> nonFeasiblePairs, Matching match) {
+		for (List<Integer> pair : nonFeasiblePairs) {
+			Integer manIndex = pair.get(0);
+			Integer womanIndex = pair.get(1);
+			Person man = match.getMen().get(manIndex);
+			Person woman = match.getWomen().get(womanIndex);
+			System.out.println("man: " + man.getPosition() + "woman: " + woman.getPosition());
 			man.markInfeasible(woman.getPosition());
 			woman.markInfeasible(man.getPosition());
 		}
 	}
 
-	private List<List<Person>> findNonFeasiblePairs(Matching manOptimalMatch, Matching womanOptimalMatch) {
+	private List<List<Integer>> findNonFeasiblePairs(Matching manOptimalMatch, Matching womanOptimalMatch) {
 		List<Person> menOptimal = manOptimalMatch.getMen();
 		List<Person> menPessimal = womanOptimalMatch.getMen();
 		List<Person> womenOptimal = womanOptimalMatch.getWomen();
 		List<Person> womenPessimal = manOptimalMatch.getWomen();
 
-		List<List<Person>>nonFeasiblePairs = new ArrayList<List<Person>>();
+		List<List<Integer>> nonFeasiblePairs = new ArrayList<List<Integer>>();
 		nonFeasiblePairs.addAll(findNonFeasiblePairsByGender(menOptimal, menPessimal, womenPessimal, true));
 		nonFeasiblePairs.addAll(findNonFeasiblePairsByGender(womenOptimal, womenPessimal, menOptimal, false));
 		return nonFeasiblePairs;
 	}
 
-	private List<List<Person>> findNonFeasiblePairsByGender(List<Person> aOptimal, List<Person> aPessimal, List<Person> groupB, boolean man) {
-		List<List<Person>>nonFeasiblePairs = new ArrayList<List<Person>>();
+	private List<List<Integer>> findNonFeasiblePairsByGender(List<Person> aOptimal, List<Person> aPessimal,
+			List<Person> groupB, boolean man) {
+		List<List<Integer>> nonFeasiblePairs = new ArrayList<List<Integer>>();
 		for (int personIndex = 0; personIndex < aOptimal.size(); personIndex++) {
 			Person person = aOptimal.get(personIndex);
 			Person optimalMatch = aOptimal.get(personIndex).getMatch();
 			Person pessimalMatch = aPessimal.get(personIndex).getMatch();
 			Integer optimalMatchIndex = groupB.indexOf(optimalMatch);
 			Integer pessimalMatchIndex = groupB.indexOf(pessimalMatch);
-			nonFeasiblePairs.addAll(findNonFeasiblePairsForIndividual(person, optimalMatchIndex, pessimalMatchIndex, groupB, man));
+			nonFeasiblePairs.addAll(
+					findNonFeasiblePairsForIndividual(person, optimalMatchIndex, pessimalMatchIndex, groupB, man));
 		}
 		return nonFeasiblePairs;
 	}
 
-	private List<List<Person>> findNonFeasiblePairsForIndividual(Person person, Integer optimalMatchIndex,
+	private List<List<Integer>> findNonFeasiblePairsForIndividual(Person person, Integer optimalMatchIndex,
 			Integer pessimalMatchIndex, List<Person> groupB, boolean man) {
-		List<List<Person>>nonFeasiblePairs = new ArrayList<List<Person>>();
+		List<List<Integer>> nonFeasiblePairs = new ArrayList<List<Integer>>();
 		boolean feasibleRange = false;
 		for (Integer preference : person.getPreferenceList()) {
 			if (preference.equals(optimalMatchIndex)) {
@@ -207,9 +213,9 @@ public class EquitableMatcher {
 			if (!feasibleRange) {
 				Person nonFeasibleMatch = groupB.get(preference);
 				if (man) {
-					nonFeasiblePairs.add(Arrays.asList(person, nonFeasibleMatch));
+					nonFeasiblePairs.add(Arrays.asList(person.getPosition(), nonFeasibleMatch.getPosition()));
 				} else {
-					nonFeasiblePairs.add(Arrays.asList(nonFeasibleMatch, person));
+					nonFeasiblePairs.add(Arrays.asList(nonFeasibleMatch.getPosition(), person.getPosition()));
 				}
 			}
 			if (preference.equals(pessimalMatchIndex)) {
@@ -222,15 +228,12 @@ public class EquitableMatcher {
 	private void evaluateMatching(Matching matching) {
 		numberOfMatchings++;
 		Long equityScore = StableMatchingUtils.calculateEquityScore(matching);
-		System.out.println("matching: " + matching.getMatchingId() + "equity score: " + equityScore);
+		System.out.println("matching: " + matching.getMatchingId() + " equity score: " + equityScore);
 		if (equityScore < bestMatchValue) {
 			bestMatchValue = equityScore;
-			System.out.println("better match found! new best: " + bestMatchValue);
 			bestMatch = matching;
 		}
 		return;
 	}
-
-
 
 }
