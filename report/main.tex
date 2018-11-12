@@ -1,0 +1,82 @@
+\documentclass[a4paper]{article}
+
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage[colorinlistoftodos]{todonotes}
+
+\title{Equitable Stable Marriage - Term Project\\Social Computing - Fall 2018}
+
+\author{Swapna Mukrappilly\\Jason Trout\\Zach Southwell\\Joshua Musick}
+
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Short summary about how we approached solving an NP-Hard Problem...
+\end{abstract}
+
+\section{Introduction}
+\label{sec:introduction}
+
+Explain the context of the experiment here. Why is condensed matter physics interesting or important?
+Optional things you could talk about (but don't have to -- this is up to you): transistors, computers, Quantum computers, fundamental knowledge (e.g. the resistance quantum).
+
+Briefly explain what methods you will use in the experiment, and what values you will extract from the data.
+
+For this section and all following sections: If you refer to an equation, previous result or theory that is not regarded as common knowledge, then cite the source (article or book) where you found this. For example, you can cite the Nano 3 Lecture notes \cite{nano3}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Background}
+\label{sec:background}
+
+\subsection{Stable Marriage Problem}
+The stable marriage problem produces a man-optimal or woman optimal solution...
+
+\subsection{Equitable Matching}
+Explain what equitable matching means..
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Experiment}
+\subsection{Equitable Metrics}
+Describe what an equitable matching is, and how we are quantifying it in our program.
+
+\subsection{Brute Force Solution}
+Explain what the brute force method is, and why that is bad.
+
+\subsection{Heuristics}
+\subsubsection{Feasible Matches - Upper and Lower Bounds}
+Describe how we used the man-optimal and woman-optimal solutions to prune our "feasible match" list by applying the man-optimal solution as the upper bound for men, and the woman-optimal solution as the lower bound for men, and vice versa...
+
+\subsubsection{Complimentary Feasible Matches}
+Describe here how we checked between the the man and woman feasible lists, and pruned if a given man ($m_1$) had a particular woman ($w_2$) in his feasible list, but she does not have him in her feasible list.  In this instance, $w_2$ would be removed from $m_1$s feasible list.  
+
+\subsubsection{Unique Matching}
+Describe how we also applied a pruning heuristic based on whether we had a unique matching between a specific man and woman, meaning that was their ONLY feasible match.  In this case, that man would be removed from all other women's feasible lists, and the woman would be removed from all other men's feasible lists.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Results}
+Show our results, meaning some sample equality metrics for a man-optimal vs woman-optimal and our matching...
+
+\begin{description}
+\item[Word] Definition
+\item[Concept] Explanation
+\item[Idea] Text
+\end{description}
+
+We hope you find write\LaTeX\ useful, and please let us know if you have any feedback using the help menu above.
+
+\begin{thebibliography}{9}
+\bibitem{nano3}
+  K. Grove-Rasmussen og Jesper Nygård,
+  \emph{Kvantefænomener i Nanosystemer}.
+  Niels Bohr Institute \& Nano-Science Center, Københavns Universitet
+
+\end{thebibliography}
+\end{document}

@@ -70,6 +70,16 @@ public class FairMatching {
 		
 		// Print the curretly possible Preference pairs
 		PrintPrefPossible(false);
+		
+		// Remove matches that have only a single "possible" match
+		trimSingleFeasible();
+		
+		// Print the curretly possible Preference pairs
+		PrintPrefPossible(false);
+		
+		System.out.println("Starting Equitable Matcher ...");
+		EquitableMatcher em = new EquitableMatcher();
+		em.findMostEquitableMatch(groups);
 	}
 	
 	public void trimOppositeGroupFeasible()

@@ -38,7 +38,7 @@ public class EquitableMatcher {
 
 	}
 
-	private void findMostEquitableMatch(List<List<Person>> input) {
+	public void findMostEquitableMatch(List<List<Person>> input) {
 		bestMatchValue = Long.MAX_VALUE;
 		bestMatch = null;
 		numberOfMatchings = 0;
