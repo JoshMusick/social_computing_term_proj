@@ -22,7 +22,12 @@ public class FairMatching {
 
 	public static void main(String[] args) {
 		// This will take a list of files, and run the algorithm on each of them
-		List<String> inputs = List.of("input.txt", "input3.txt", "input4.txt", "test3.txt");
+		List<String> inputs = List.of(
+				"input.txt" 
+				, "input3.txt" 
+				, "input4.txt"
+				, "test3.txt"
+				);
 		
 		FairMatching fm = new FairMatching();
 		
@@ -43,19 +48,18 @@ public class FairMatching {
 		
 		ResetData();
 		
-		List<List<Person>> groups = InputParserUtility.ParseInput(filename);
-		List<List<Person>> manOptimalMatch = GaleShapelyAlgorithm.execute(cloneGroups(groups), "m");
-		List<List<Person>> womanOptimalMatch = GaleShapelyAlgorithm.execute(cloneGroups(groups), "w");
+		Matching unPairedMatching = InputParserUtility.ParseInput(filename);
+		Matching manOptimalMatch = GaleShapelyAlgorithm.execute(unPairedMatching.clone(), "m");
+		Matching womanOptimalMatch = GaleShapelyAlgorithm.execute(unPairedMatching.clone(), "w");
 		
-		menGroup = groups.get(0);
-		womenGroup = groups.get(1);
+		menGroup = unPairedMatching.getMen();
+		womenGroup = unPairedMatching.getWomen();
 		
-		//PrintPreferences(menGroup, "Men");	
-		PrintMatching(manOptimalMatch, "Man Optimal Matching", true);
-		
-		//PrintPreferences(womenGroup, "Women");
-		PrintMatching(womanOptimalMatch, "Woman Optimal Matching", false);
+		//PrintMatching(manOptimalMatch, "Man Optimal Matching", true);
+		//PrintMatching(womanOptimalMatch, "Woman Optimal Matching", false);
 	
+		System.out.println("Trimming has begun...");
+		
 		// trim the entries which are outside the optimal and pessimistic "bounds"
 		trimAllFeasiblePreferences(manOptimalMatch, womanOptimalMatch);
 		
@@ -63,13 +67,29 @@ public class FairMatching {
 		trimSingleFeasible();
 		
 		// Print the curretly possible Preference pairs
-		PrintPrefPossible(true);
+	//	PrintPrefPossible(false);
 		
 		// Trim options which are not feasible from the opposite group
 		trimOppositeGroupFeasible();
 		
 		// Print the curretly possible Preference pairs
+	//	PrintPrefPossible(false);
+		
+		// Remove matches that have only a single "possible" match
+		trimSingleFeasible();
+				
+		// Print the curretly possible Preference pairs
 		PrintPrefPossible(false);
+				
+		System.out.println("Starting Equitable Matcher ...");
+		EquitableMatcher em = new EquitableMatcher();
+		em.findAllMatchings(manOptimalMatch, false);
+		
+		em.printResults(manOptimalMatch, womanOptimalMatch);
+		
+		//EquitableMatcher em2 = new EquitableMatcher();
+		//em2.findAllMatchings(womanOptimalMatch, false);
+		//em.printResults(manOptimalMatch, womanOptimalMatch);
 	}
 	
 	public void trimOppositeGroupFeasible()
@@ -115,7 +135,7 @@ public class FairMatching {
 			if (cnt == 1) {
 				// Person p only has 1 possible match, and their position is "matchNum"
 				int matchNum = prefs.get(0);
-				System.out.println("Unique Match found: " + p.getPosition() + ", " + matchNum);
+			//	System.out.println("Unique Match found: " + p.getPosition() + ", " + matchNum);
 				for (Person pers : grpA) 
 				{
 					// Ensure all other members of grpA have matchNum marked as infeasible
@@ -185,13 +205,13 @@ public class FairMatching {
 		}
 	}
 	
-	private void trimAllFeasiblePreferences(List<List<Person>> manOptimalMatch,	List<List<Person>> womanOptimalMatch) {
+	private void trimAllFeasiblePreferences(Matching manOptimalMatch, Matching womanOptimalMatch) {
 		List<Person> men = menGroup; // groups.get(0);
 		List<Person> women = womenGroup; // groups.get(1);
-		List<Person> menOptimal = manOptimalMatch.get(0);
-		List<Person> menPessimal = womanOptimalMatch.get(0);
-		List<Person> womenOptimal = womanOptimalMatch.get(1);
-		List<Person> womenPessimal = manOptimalMatch.get(1);
+		List<Person> menOptimal = manOptimalMatch.getMen();
+		List<Person> menPessimal = womanOptimalMatch.getWomen();
+		List<Person> womenOptimal = womanOptimalMatch.getWomen();
+		List<Person> womenPessimal = manOptimalMatch.getWomen();
 
 		
 //		PrintPrefPossible(men, women, menOptimal, menPessimal);
@@ -240,7 +260,7 @@ public class FairMatching {
 	}
 	
 	
-	public void PrintMatching(List<List<Person>> matching, String title, boolean menFirst) {
+	public void PrintMatching(Matching matching, String title, boolean menFirst) {
 		System.out.println("Results of " + title);
 		StableMatchingUtils.printOutput(matching, menFirst);
 	}
@@ -255,13 +275,13 @@ public class FairMatching {
 		}
 	}
 	
-	private List<List<Person>> cloneGroups(List<List<Person>> groups) {
-		return groups.stream() //
-				.map(personList -> personList.stream() //
-						.map(person -> person.clone(person)) //
-						.collect(Collectors.toList())) //
-				.collect(Collectors.toList());
-	}
+//	private List<List<Person>> cloneGroups(List<List<Person>> groups) {
+//		return groups.stream() //
+//				.map(personList -> personList.stream() //
+//						.map(person -> person.clone(person)) //
+//						.collect(Collectors.toList())) //
+//				.collect(Collectors.toList());
+//	}
 
 	
 }

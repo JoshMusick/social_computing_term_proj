@@ -32,8 +32,15 @@ public class EquitableMatcher {
 
 		StableMatchingUtils.printReducedPreferenceLists(manOptimalMatch);
 
-		findAllMatchings(manOptimalMatch);
+		findAllMatchings(manOptimalMatch, true);
 
+		printResults(manOptimalMatch, womanOptimalMatch);
+		
+		return numberOfMatchings;
+	}
+	
+	public void printResults(Matching manOptimalMatch, Matching womanOptimalMatch )
+	{
 		Long equityScore = StableMatchingUtils.calculateEquityScore(manOptimalMatch);
 		System.out.println("Man-optimal equity score: " + equityScore);
 		equityScore = StableMatchingUtils.calculateEquityScore(womanOptimalMatch);
@@ -41,10 +48,9 @@ public class EquitableMatcher {
 		System.out.println("Optimal matching:");
 		StableMatchingUtils.printOutput(bestMatch, true);
 		System.out.println("Total matchings: " + numberOfMatchings + " Optimal equity score: " + bestMatchValue);
-		return numberOfMatchings;
 	}
 
-	private void findAllMatchings(Matching baseMatching) {
+	public void findAllMatchings(Matching baseMatching, boolean printMatching) {
 
 		List<Integer> matchId = baseMatching.getMatchingId();
 		if (uniqueMatchings.contains(matchId)) {
@@ -53,11 +59,11 @@ public class EquitableMatcher {
 
 		uniqueMatchings.add(matchId);
 		// If we get here, then we've identified a new matching!
-		evaluateMatching(baseMatching);
+		evaluateMatching(baseMatching, printMatching);
 
 		for (Rotation rotation : identifyRotations(baseMatching)) {
 			Matching rotatedMatch = getRotatedMatch(baseMatching, rotation);
-			findAllMatchings(rotatedMatch);
+			findAllMatchings(rotatedMatch, printMatching);
 		}
 	}
 
@@ -224,10 +230,12 @@ public class EquitableMatcher {
 		return nonFeasiblePairs;
 	}
 
-	private void evaluateMatching(Matching matching) {
+	private void evaluateMatching(Matching matching, boolean printMatching) {
 		numberOfMatchings++;
 		Long equityScore = StableMatchingUtils.calculateEquityScore(matching);
-		System.out.println("matching: " + matching.getMatchingId() + " equity score: " + equityScore);
+		if (printMatching) {
+			System.out.println("matching: " + matching.getMatchingId() + " equity score: " + equityScore);
+		}		
 		if (equityScore < bestMatchValue) {
 			bestMatchValue = equityScore;
 			bestMatch = matching;
