@@ -9,7 +9,7 @@ public class EquitableMatcher {
 	private Long bestMatchValue = Long.MAX_VALUE;
 	private Matching bestMatch = null;
 	private Integer numberOfMatchings = 0;
-	Set<List<Integer>> matchLattice = new HashSet<List<Integer>>();
+	Set<List<Integer>> uniqueMatchings = new HashSet<List<Integer>>();
 
 	public static void main(String[] args) {
 		if (args.length != 1) {
@@ -17,12 +17,12 @@ public class EquitableMatcher {
 			return;
 		}
 		EquitableMatcher em = new EquitableMatcher();
-		em.match(args[0]);
+		Matching unPairedMatching = InputParserUtility.ParseInput(args[0]);
+		em.match(unPairedMatching);
 	}
 
-	private void match(String filename) {
+	public Integer match(Matching unPairedMatching) {
 
-		Matching unPairedMatching = InputParserUtility.ParseInput(filename);
 		Matching manOptimalMatch = GaleShapelyAlgorithm.execute(unPairedMatching.clone(), "m");
 		Matching womanOptimalMatch = GaleShapelyAlgorithm.execute(unPairedMatching.clone(), "w");
 
@@ -32,7 +32,7 @@ public class EquitableMatcher {
 
 		StableMatchingUtils.printReducedPreferenceLists(manOptimalMatch);
 
-		matchLattice = findAllMatchings(manOptimalMatch);
+		findAllMatchings(manOptimalMatch);
 
 		Long equityScore = StableMatchingUtils.calculateEquityScore(manOptimalMatch);
 		System.out.println("Man-optimal equity score: " + equityScore);
@@ -41,25 +41,24 @@ public class EquitableMatcher {
 		System.out.println("Optimal matching:");
 		StableMatchingUtils.printOutput(bestMatch, true);
 		System.out.println("Total matchings: " + numberOfMatchings + " Optimal equity score: " + bestMatchValue);
-
+		return numberOfMatchings;
 	}
 
-	private Set<List<Integer>> findAllMatchings(Matching baseMatching) {
-		Set<List<Integer>> returnVal = new HashSet<List<Integer>>();
+	private void findAllMatchings(Matching baseMatching) {
 
 		List<Integer> matchId = baseMatching.getMatchingId();
-		if (matchLattice.contains(matchId)) {
-			return returnVal;
+		if (uniqueMatchings.contains(matchId)) {
+			return;
 		}
 
+		uniqueMatchings.add(matchId);
 		// If we get here, then we've identified a new matching!
 		evaluateMatching(baseMatching);
 
 		for (Rotation rotation : identifyRotations(baseMatching)) {
 			Matching rotatedMatch = getRotatedMatch(baseMatching, rotation);
-			returnVal.addAll(findAllMatchings(rotatedMatch));
+			findAllMatchings(rotatedMatch);
 		}
-		return returnVal;
 	}
 
 	private Matching getRotatedMatch(Matching matching, Rotation rotation) {

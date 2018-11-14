@@ -68,6 +68,17 @@ public class StableMatchingUtils {
 		}
 	}
 
+	public static void printPreferenceLists(Matching groups) {
+		for (int i = 0; i < groups.getMen().size(); i++) {
+			Person p = groups.getMen().get(i);
+			System.out.println( i + " " + p.getPreferenceList());
+		}
+		for (int i = 0; i < groups.getWomen().size(); i++) {
+			Person p = groups.getWomen().get(i);
+			System.out.println( i + " " + p.getPreferenceList());
+		}
+	}
+
 	public static Long calculateEquityScore(Matching match) {
 		List<Person> men = match.getMen();
 		List<Person> women = match.getWomen();

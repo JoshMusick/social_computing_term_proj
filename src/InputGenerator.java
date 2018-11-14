@@ -6,8 +6,14 @@ import java.util.stream.IntStream;
 public class InputGenerator {
 
 	public static void main(String[] args) {
-		String output = args[0] + System.lineSeparator();
-		Integer size = Integer.valueOf(args[0]);
+		String generatedInput = generateRandomInput(Integer.valueOf(args[0]));
+		System.out.println(generatedInput);
+	}
+
+	public static String generateRandomInput(Integer pairs) {
+
+		String output = pairs.toString() + System.lineSeparator();
+		Integer size = pairs;
 		List<Integer> preferenceList = IntStream.rangeClosed(1, size) //
 				.boxed() //
 				.collect(Collectors.toList());
@@ -19,6 +25,6 @@ public class InputGenerator {
 					.collect(Collectors.joining(" "));
 			output += shuffledPreferenceList + System.lineSeparator();
 		}
-		System.out.println(output);
+		return output;
 	}
 }

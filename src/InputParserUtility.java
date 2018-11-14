@@ -22,7 +22,7 @@ public class InputParserUtility {
 		}
 	}
 
-	private static Matching parseInput(final List<String> inputLines) throws Exception {
+	public static Matching parseInput(final List<String> inputLines) throws Exception {
 
 		List<String> lines = inputLines.stream() //
 				.map(line -> line.replaceAll("^\\s+", "")) // remove leading spaces
