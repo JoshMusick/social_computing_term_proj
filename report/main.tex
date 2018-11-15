@@ -56,6 +56,8 @@ A shortfall of this method however, is that such a stable marriage could actuall
 
 \textcolor{red}{IS THIS TRUE? The man optimal would be the woman-pessimal, and therefore, all women could only improve their matching, and therefore their cumulative score can only improve.}
 
+\textcolor{blue}{Ah, you're right... I think it's still a valid point but my example is wrong... How about this: Suppose some man-optimal matching produces a cumulative score of 20 for the men and 30 for the women. Suppose the woman-optimal matching for the same set produces the opposite: a cumulative score of 20 for the women, but 30 for the men. Now suppose that we find the the most balanced matching produces cumulative scores of 28, 28. But what if there were a matching that produced cumulative scores of 23, 27, wouldn't that be better, even if it's less balanced? }
+
 Instead, our criteria for finding the `equitable' matching is a matching that minimizes the total cumulative score for all participants of the matching. This optimal matching may turn out to be more favorable to one gender, but it cannot be less favorable than one of the man/woman optimal matchings. (This is trivially true because the least favorable matching for any group/individual is one of the man/woman optimal matchings)
 
 Unfortunately we found out that this is an NP hard problem to solve. (TODO: add some explanation about why the problem is intractable)
