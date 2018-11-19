@@ -29,7 +29,7 @@ public class FairMatching {
 	}
 	
 	// Results collection
-	private List<MatchingResult> results = new ArrayList<MatchingResult>();
+//	private List<MatchingResult> results = new ArrayList<MatchingResult>();
 	
 	// Debugging display bitmask for controlling output
 	public static final int DEBUG_PRINT_NONE = 0;
@@ -51,6 +51,7 @@ public class FairMatching {
 		
 	
 	// Heuristic Step Bitmask, indicates steps to be used for finding optimal solution
+	public static final int TRIM_NONE 	= 			0;		// do no pruning of input set
 	public static final int TRIM_SINGLE_FEASIBLE = 1 << 0; // If a man or woman has a single feasible option, trim all others from having them as an option
 	public static final int TRIM_MUTUAL_FEASIBLE = 1 << 1; // trim feasible options that are not mutual between all men and women
 	public static final int TRIM_ALL = TRIM_SINGLE_FEASIBLE | TRIM_MUTUAL_FEASIBLE;
@@ -61,16 +62,15 @@ public class FairMatching {
 	private List<Person> menGroup = List.of();
 	private List<Person> womenGroup = List.of();
 	
-	private List<List<Person>> finalMatching = List.of();
-	
 	/** 
 	 * This function will reset any class data, it is intended to be called before doing a new matching
 	 */
 	public void ResetData()
 	{
+		startTime = 0;
+		endTime = 0;
 		menGroup = List.of();
 		womenGroup = List.of();
-		finalMatching = List.of();
 		m_filename = "";
 	}
 
@@ -79,30 +79,53 @@ public class FairMatching {
 		List<String> inputs = List.of(
 				"input.txt" 
 				, "input3.txt" 
-				, "test3.txt"
 				, "input4.txt"
+				, "test3.txt"
+				, "test3.txt"
+				, "test3.txt"
+				, "test3.txt"
+				, "test3.txt"
+				, "test3.txt"
 				);
 		
-		FairMatching fm = new FairMatching();
+		List<Integer> trimVals = List.of(
+				TRIM_ALL
+				, TRIM_ALL
+				, TRIM_ALL
+				, TRIM_ALL
+				, TRIM_ALL
+				, TRIM_MUTUAL_FEASIBLE
+				, TRIM_SINGLE_FEASIBLE
+				, TRIM_NONE
+				, TRIM_ALL
+				);		
+		
+		
+		List<MatchingResult> results = new ArrayList<MatchingResult>();
 		
 		System.out.println("Starting Fair Matching...");
+		int index = 0;
 		for (String fileN : inputs) {
 			System.out.println("*************************************");
 			System.out.println("Loading input file " + fileN);
 			
-			fm.PerformMatching(fileN, TRIM_ALL, DEBUG_PRINT_NONE);	
+			FairMatching fm = new FairMatching();
+			
+			MatchingResult res = fm.PerformMatching(fileN, trimVals.get(index), DEBUG_PRINT_NONE);	
 			System.out.println("*************************************");
+			index++;
+			results.add(res);
 		}
 		System.out.println("*************************************");
 		
-		fm.PrintResults();		
+		PrintResults(results);		
 		System.out.println("Fair Matching complete...");
 
 	}
 
-	public void PerformMatching(String filename, int trimMask, int debugMask) {
+	public MatchingResult PerformMatching(String filename, int trimMask, int debugMask) {
 		
-		ResetData();
+		//ResetData();
 		
 		SetFilename(filename);
 		
@@ -115,7 +138,6 @@ public class FairMatching {
 		
 		SetEnd();
 		long gs_time_ns = GetTimeNS();
-		double gs_time_ms = GetTimeMS();
 		
 		menGroup = unPairedMatching.getMen();
 		womenGroup = unPairedMatching.getWomen();
@@ -168,6 +190,8 @@ public class FairMatching {
 			}			
 		}
 		
+		SetEnd();
+		long heuristic_time = GetTimeNS();
 		System.out.println("Trimming complete after " + loopCnt + " loops");
 				
 				
@@ -178,14 +202,14 @@ public class FairMatching {
 		}
 						
 		System.out.println("Starting Equitable Matcher ...");
+		SetStart();
 		EquitableMatcher em = new EquitableMatcher();
 		em.findAllMatchings(manOptimalMatch, false);
 		
 		SetEnd();
 		
 		long equitable_time = GetTimeNS();
-		double equitable_time_ms = GetTimeMS();
-		
+				
 //		em.printResults(manOptimalMatch, womanOptimalMatch);
 		
 		long manEquityScore = StableMatchingUtils.calculateEquityScore(manOptimalMatch);
@@ -194,12 +218,12 @@ public class FairMatching {
 		System.out.println("Man Optimal Equitable Score - " + manEquityScore + 
 				" :: Woman Optimal Equitable Score - " + womanEquityScore);
 		
-		StoreMatchingResults(em.GetBestMatching(), manOptimalMatch, womanOptimalMatch, gs_time_ns, equitable_time );
+		return StoreMatchingResults(em.GetBestMatching(), manOptimalMatch, womanOptimalMatch, gs_time_ns, heuristic_time, equitable_time, trimMask );
 
 	}
 	
-	private void StoreMatchingResults(Matching bestMatch, Matching manOptMatch, Matching womanOptMatch, 
-			long GS_time_ns, long equityTime_ns)
+	private MatchingResult StoreMatchingResults(Matching bestMatch, Matching manOptMatch, Matching womanOptMatch, 
+			long GS_time_ns, long heur_time_ns, long equityTime_ns, int trimMask)
 	{
 		
 		int cnt = manOptMatch.men.size();
@@ -218,28 +242,35 @@ public class FairMatching {
 		System.out.println("For Woman Optimal - the man equity score is " + manWomanOpt + " and woman equity score is " + 
 				womanWomanOpt + " :: with a total equity score of " + (manWomanOpt + womanWomanOpt));
 		
-		MatchingResult res = new MatchingResult(cnt, GS_time_ns, equityTime_ns, m_filename);
+		MatchingResult res = new MatchingResult(cnt, GS_time_ns, heur_time_ns, equityTime_ns, m_filename);
 		res.SetManValues(manManOpt, manWomanOpt, manEquit);
-		res.SetWomanValues(womanManOpt, womanWomanOpt, womanEquit);
+		res.SetWomanValues(womanWomanOpt, womanManOpt, womanEquit);
+		res.SetTrimMask(trimMask);
 		
-		results.add(res);
+		return res;
+		//results.add(res);
 		
 	}
 	
-	public void PrintResults()
+	public static void PrintResults(List<MatchingResult> results)
 	{
 		System.out.println(" results...");
 		
-		List<MatchingResult> resList = GetSortedResults();
+		List<MatchingResult> resList = GetSortedResults(results);
+		boolean first = true;
 		for (MatchingResult r : resList)
 		{
-			System.out.println("Num " + r.GetNumPeople() + " Filename " + r.GetFilename());
+			if (first) {
+				first = false;
+				r.PrintHeader();
+			}
+			r.PrintData();
 		}
 		
 		
 	}
 
-	public List<MatchingResult> GetSortedResults()
+	public static List<MatchingResult> GetSortedResults(List<MatchingResult> results)
 	{
 		return results.stream()
 				.sorted(Comparator.comparing(MatchingResult::GetNumPeople)).collect(Collectors.toList()); //.compareTo(o2.GetNumPeople()));
