@@ -1,8 +1,15 @@
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-
 public class FairMatching {
+	
+	String m_filename;
+	private void SetFilename(String name) {
+		m_filename = name;
+	}
+	
 	
 	// Timer variables for tracking algorithm performance
 	long startTime = 0;
@@ -21,6 +28,9 @@ public class FairMatching {
 		return time_ms;
 	}
 	
+	// Results collection
+	private List<MatchingResult> results = new ArrayList<MatchingResult>();
+	
 	// Debugging display bitmask for controlling output
 	public static final int DEBUG_PRINT_NONE = 0;
 	public static final int DEBUG_PRINT_PREF_LIST = 1 << 0; // Displays the original preference list at various stages
@@ -30,8 +40,8 @@ public class FairMatching {
 	public static final int DEBUG_PRINT_FEASIBLE_RANGE = 1 << 4; // Displays the initial feasible preference index range after optimal / pessimal trim
 	public static final int DEBUG_PRINT_FEASIBLE_FROM_TRIM = 1 << 5; // Displays the feasible pref list after doing the optimal / pessimal trim
 	
-	public static final int DEBUG_PRINT_FEASIBLE_AFTER_UNIQUE_TRIM_1 = 1 << 6; // Displays the feasible pref list after doing the Unique Feasible trim #1
-	public static final int DEBUG_PRINT_FEASIBLE_AFTER_UNIQUE_TRIM_2 = 1 << 7; // Displays the feasible pref list after doing the Unique Feasible trim #2
+	public static final int DEBUG_PRINT_FEASIBLE_AFTER_UNIQUE_TRIM = 1 << 6; // Displays the feasible pref list after doing the Unique Feasible trim #1
+	//public static final int DEBUG_PRINT_FEASIBLE_AFTER_UNIQUE_TRIM_2 = 1 << 7; // Displays the feasible pref list after doing the Unique Feasible trim #2
 	
 	public static final int DEBUG_PRINT_FEASIBLE_AFTER_MUTUAL_PREF_TRIM = 1 << 8; // Displays the feasible pref list after performing the mutual feasible trim
 	
@@ -61,6 +71,7 @@ public class FairMatching {
 		menGroup = List.of();
 		womenGroup = List.of();
 		finalMatching = List.of();
+		m_filename = "";
 	}
 
 	public static void main(String[] args) {
@@ -68,8 +79,8 @@ public class FairMatching {
 		List<String> inputs = List.of(
 				"input.txt" 
 				, "input3.txt" 
-				, "input4.txt"
 				, "test3.txt"
+				, "input4.txt"
 				);
 		
 		FairMatching fm = new FairMatching();
@@ -83,6 +94,8 @@ public class FairMatching {
 			System.out.println("*************************************");
 		}
 		System.out.println("*************************************");
+		
+		fm.PrintResults();		
 		System.out.println("Fair Matching complete...");
 
 	}
@@ -90,6 +103,8 @@ public class FairMatching {
 	public void PerformMatching(String filename, int trimMask, int debugMask) {
 		
 		ResetData();
+		
+		SetFilename(filename);
 		
 		Matching unPairedMatching = InputParserUtility.ParseInput(filename);
 		
@@ -120,36 +135,44 @@ public class FairMatching {
 		// trim the entries which are outside the optimal and pessimistic "bounds"
 		trimAllFeasiblePreferences(manOptimalMatch, womanOptimalMatch, debugMask);
 		
-		if ((trimMask & TRIM_SINGLE_FEASIBLE) > 0) {
-			// Remove matches that have only a single "possible" match
-			trimSingleFeasible();			
+		boolean reTrim = true;
+		int loopCnt = 0;
+		while (reTrim) {
+			reTrim = false;
+			loopCnt++;
+			
+			if ((trimMask & TRIM_SINGLE_FEASIBLE) > 0) {
+				// Remove matches that have only a single "possible" match
+				if (trimSingleFeasible() > 0) {
+					reTrim = true;
+				}
+				
+				if ((debugMask & DEBUG_PRINT_FEASIBLE_AFTER_UNIQUE_TRIM) > 0) {
+					// Print the currently possible Preference pairs
+					PrintPrefPossible(printFullPreference);
+				}
+				
+			}
+			
+			if ((trimMask & TRIM_MUTUAL_FEASIBLE) > 0) {
+				// Trim options which are not feasible from the opposite group
+				if(trimMutualFeasible() > 0) {
+					reTrim = true;
+				}
+				
+				if ((debugMask & DEBUG_PRINT_FEASIBLE_AFTER_MUTUAL_PREF_TRIM) > 0) {
+					// Print the curretly possible Preference pairs
+					PrintPrefPossible(printFullPreference);
+				}
+			
+			}			
 		}
-
-		if ((debugMask & DEBUG_PRINT_FEASIBLE_AFTER_UNIQUE_TRIM_1) > 0) {
-			// Print the currently possible Preference pairs
-			PrintPrefPossible(printFullPreference);
-		}
 		
-		
-		if ((trimMask & TRIM_MUTUAL_FEASIBLE) > 0) {
-			// Trim options which are not feasible from the opposite group
-			trimMutualFeasible();
-		}
-		
-		if ((debugMask & DEBUG_PRINT_FEASIBLE_AFTER_MUTUAL_PREF_TRIM) > 0) {
-			// Print the curretly possible Preference pairs
-			PrintPrefPossible(printFullPreference);
-		}
-		
-		
-		if ((trimMask & TRIM_SINGLE_FEASIBLE) > 0) {
-			// Remove matches that have only a single "possible" match
-			System.out.println("-----\nPerforming Single Feasible Trim...");
-			trimSingleFeasible();
-		}
-		
+		System.out.println("Trimming complete after " + loopCnt + " loops");
+				
+				
 		// Print the preference list after the single feasible trim or final feasible list prior to using the EquitableMatcher
-		if ((debugMask & (DEBUG_PRINT_FEASIBLE_AFTER_UNIQUE_TRIM_2 | DEBUG_PRINT_FEASIBLE_BEFORE_EQ_MATCHER)) > 0) {
+		if ((debugMask & ( DEBUG_PRINT_FEASIBLE_BEFORE_EQ_MATCHER)) > 0) {
 			// Print the currently possible Preference pairs
 			PrintPrefPossible(printFullPreference);
 		}
@@ -179,16 +202,47 @@ public class FairMatching {
 			long GS_time_ns, long equityTime_ns)
 	{
 		
+		int cnt = manOptMatch.men.size();
+		
 		int manManOpt = GetEquityScore(manOptMatch, true);
 		int womanManOpt = GetEquityScore(manOptMatch, false);
 		
 		int manWomanOpt = GetEquityScore(womanOptMatch, true);
 		int womanWomanOpt = GetEquityScore(womanOptMatch, false);
 		
+		int manEquit = GetEquityScore(bestMatch, true);
+		int womanEquit = GetEquityScore(bestMatch, false);
+		
 		System.out.println("For Man Optimal - the man equity score is " + manManOpt + " and woman equity score is " + 
 		womanManOpt + " :: with a total equity score of " + (manManOpt + womanManOpt));
 		System.out.println("For Woman Optimal - the man equity score is " + manWomanOpt + " and woman equity score is " + 
 				womanWomanOpt + " :: with a total equity score of " + (manWomanOpt + womanWomanOpt));
+		
+		MatchingResult res = new MatchingResult(cnt, GS_time_ns, equityTime_ns, m_filename);
+		res.SetManValues(manManOpt, manWomanOpt, manEquit);
+		res.SetWomanValues(womanManOpt, womanWomanOpt, womanEquit);
+		
+		results.add(res);
+		
+	}
+	
+	public void PrintResults()
+	{
+		System.out.println(" results...");
+		
+		List<MatchingResult> resList = GetSortedResults();
+		for (MatchingResult r : resList)
+		{
+			System.out.println("Num " + r.GetNumPeople() + " Filename " + r.GetFilename());
+		}
+		
+		
+	}
+
+	public List<MatchingResult> GetSortedResults()
+	{
+		return results.stream()
+				.sorted(Comparator.comparing(MatchingResult::GetNumPeople)).collect(Collectors.toList()); //.compareTo(o2.GetNumPeople()));
 	}
 	
 	/**
@@ -208,14 +262,24 @@ public class FairMatching {
 		return score;
 	}
 	
-	public void trimMutualFeasible()
+	public int trimMutualFeasible()
 	{
+		int cnt = 0;
 		System.out.println("-----\nPerforming Mutual Feasible Trim...");
-		trimMutualFeasibleLists(menGroup, womenGroup);
-		trimMutualFeasibleLists(womenGroup, menGroup);	
+		cnt += trimMutualFeasibleLists(menGroup, womenGroup);
+		cnt += trimMutualFeasibleLists(womenGroup, menGroup);
+		return cnt;
 	}
 	
-	private void trimMutualFeasibleLists(List<Person> grpA, List<Person> grpB)
+	/**
+	 * This function will go through all members of grpA, and for each member of grpA, person p, test 
+	 * that every person in p's list of feasible options (fp) also contains p.  If p is not in fp's list
+	 * of feasible options, fp is removed from f's list. of trim non-mutually feasible options from each member of grpA, relative to all grpB 
+	 * @param grpA - Group of persons that will be iterated over, testing for mutual feasible options in grpB
+	 * @param grpB - Group of persons that will be checked for feasible options
+	 * @return Number of non-feasible options that were removed during this check
+	 */
+	private int trimMutualFeasibleLists(List<Person> grpA, List<Person> grpB)
 	{
 		int count = 0;
 		// Go through each person in group A
@@ -232,13 +296,17 @@ public class FairMatching {
 			}
 		}
 		System.out.println("Removed " + count + " infeasible non-mutual matches ...");
+		return count;
 	}
 	
-	public void trimSingleFeasible()
+	public int trimSingleFeasible()
 	{
+		int cnt = 0;
 		System.out.println("-----\nPerforming Single Feasible Trim...");
-		trimUniqueMatch(menGroup, womenGroup);
-		trimUniqueMatch(womenGroup, menGroup);
+		cnt += trimUniqueMatch(menGroup, womenGroup);
+		cnt += trimUniqueMatch(womenGroup, menGroup);
+		System.out.println("Removed " + cnt + " single-feasible matches ...");
+		return cnt;
 	}
 	
 	public int trimUniqueMatch(List<Person> grpA, List<Person> grpB) 
@@ -260,26 +328,11 @@ public class FairMatching {
 							numReduced++;
 						}						
 					}
-				}
-				
-			//	for (Person pers : grpB) {
-					// all people in grpB should be have person p be infeasible, except p
-					
-			//	}
-				
-				
-				
+				}			
 				
 			}				
 		}
 		return numReduced;
-	}
-	
-	private int MarkInfeasiblePair(Person p1, Person p2)
-	{
-		
-		
-		return 0;
 	}
 	
 	private void PrintPrefPossible(List<Person> groupA, List<Person> groupB, List<Person> aOptimal,
