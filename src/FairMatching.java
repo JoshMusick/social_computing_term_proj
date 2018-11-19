@@ -30,6 +30,13 @@ public class FairMatching {
 	public static final int DEBUG_PRINT_FEASIBLE_RANGE = 1 << 4; // Displays the initial feasible preference index range after optimal / pessimal trim
 	public static final int DEBUG_PRINT_FEASIBLE_FROM_TRIM = 1 << 5; // Displays the feasible pref list after doing the optimal / pessimal trim
 	
+	public static final int DEBUG_PRINT_FEASIBLE_AFTER_UNIQUE_TRIM_1 = 1 << 6; // Displays the feasible pref list after doing the Unique Feasible trim #1
+	public static final int DEBUG_PRINT_FEASIBLE_AFTER_UNIQUE_TRIM_2 = 1 << 7; // Displays the feasible pref list after doing the Unique Feasible trim #2
+	
+	public static final int DEBUG_PRINT_FEASIBLE_AFTER_MUTUAL_PREF_TRIM = 1 << 8; // Displays the feasible pref list after performing the mutual feasible trim
+	
+	public static final int DEBUG_PRINT_FEASIBLE_BEFORE_EQ_MATCHER = 1 << 9; // Displays the feasible pref list after doing the optimal / pessimal trim
+	
 	public static final int DEBUG_PRINT_ALL = 0xFFFFFFFF;
 		
 	
@@ -98,6 +105,8 @@ public class FairMatching {
 		menGroup = unPairedMatching.getMen();
 		womenGroup = unPairedMatching.getWomen();
 		
+		boolean printFullPreference = ((debugMask & DEBUG_PRINT_PREF_LIST) > 0);
+		
 		if ((debugMask & DEBUG_PRINT_MAN_OPT_MATCHING) > 0) {
 			PrintMatching(manOptimalMatch, "Man Optimal Matching", true);
 		}
@@ -105,7 +114,7 @@ public class FairMatching {
 			PrintMatching(womanOptimalMatch, "Woman Optimal Matching", false);
 		}
 		
-		System.out.println("Trimming has begun...");
+		System.out.println("-----------------\nTrimming has begun...");
 		
 		SetStart();
 		// trim the entries which are outside the optimal and pessimistic "bounds"
@@ -116,27 +125,35 @@ public class FairMatching {
 			trimSingleFeasible();			
 		}
 
+		if ((debugMask & DEBUG_PRINT_FEASIBLE_AFTER_UNIQUE_TRIM_1) > 0) {
+			// Print the currently possible Preference pairs
+			PrintPrefPossible(printFullPreference);
+		}
 		
-		// Print the curretly possible Preference pairs
-	//	PrintPrefPossible(false);
 		
 		if ((trimMask & TRIM_MUTUAL_FEASIBLE) > 0) {
 			// Trim options which are not feasible from the opposite group
-			trimOppositeGroupFeasible();
+			trimMutualFeasible();
 		}
 		
+		if ((debugMask & DEBUG_PRINT_FEASIBLE_AFTER_MUTUAL_PREF_TRIM) > 0) {
+			// Print the curretly possible Preference pairs
+			PrintPrefPossible(printFullPreference);
+		}
 		
-		// Print the curretly possible Preference pairs
-	//	PrintPrefPossible(false);
 		
 		if ((trimMask & TRIM_SINGLE_FEASIBLE) > 0) {
 			// Remove matches that have only a single "possible" match
+			System.out.println("-----\nPerforming Single Feasible Trim...");
 			trimSingleFeasible();
 		}
-				
-		// Print the curretly possible Preference pairs
-		PrintPrefPossible(false);
-				
+		
+		// Print the preference list after the single feasible trim or final feasible list prior to using the EquitableMatcher
+		if ((debugMask & (DEBUG_PRINT_FEASIBLE_AFTER_UNIQUE_TRIM_2 | DEBUG_PRINT_FEASIBLE_BEFORE_EQ_MATCHER)) > 0) {
+			// Print the currently possible Preference pairs
+			PrintPrefPossible(printFullPreference);
+		}
+						
 		System.out.println("Starting Equitable Matcher ...");
 		EquitableMatcher em = new EquitableMatcher();
 		em.findAllMatchings(manOptimalMatch, false);
@@ -191,13 +208,11 @@ public class FairMatching {
 		return score;
 	}
 	
-	public void trimOppositeGroupFeasible()
+	public void trimMutualFeasible()
 	{
-		System.out.println("***************************************************************");
-		System.out.println("Removing possible matches based on non-mutual feasible lists...");
+		System.out.println("-----\nPerforming Mutual Feasible Trim...");
 		trimMutualFeasibleLists(menGroup, womenGroup);
-		trimMutualFeasibleLists(womenGroup, menGroup);
-		
+		trimMutualFeasibleLists(womenGroup, menGroup);	
 	}
 	
 	private void trimMutualFeasibleLists(List<Person> grpA, List<Person> grpB)
@@ -221,13 +236,14 @@ public class FairMatching {
 	
 	public void trimSingleFeasible()
 	{
-		System.out.println("Trimming Unique Matches from feasible lists...");
+		System.out.println("-----\nPerforming Single Feasible Trim...");
 		trimUniqueMatch(menGroup, womenGroup);
 		trimUniqueMatch(womenGroup, menGroup);
 	}
 	
-	public void trimUniqueMatch(List<Person> grpA, List<Person> grpB) 
+	public int trimUniqueMatch(List<Person> grpA, List<Person> grpB) 
 	{
+		int numReduced = 0;
 		for (Person p : grpA) {
 			List<Integer> prefs = p.getFeasiblePreferences();
 			int cnt = prefs.size();
@@ -239,13 +255,31 @@ public class FairMatching {
 				{
 					// Ensure all other members of grpA have matchNum marked as infeasible
 					if (!pers.equals(p)) {
-						pers.markInfeasible(matchNum);
+						if (pers.IsFeasible(matchNum)) {
+							pers.markInfeasible(matchNum);
+							numReduced++;
+						}						
 					}
 				}
-								
+				
+			//	for (Person pers : grpB) {
+					// all people in grpB should be have person p be infeasible, except p
+					
+			//	}
+				
+				
+				
+				
 			}				
 		}
+		return numReduced;
+	}
+	
+	private int MarkInfeasiblePair(Person p1, Person p2)
+	{
 		
+		
+		return 0;
 	}
 	
 	private void PrintPrefPossible(List<Person> groupA, List<Person> groupB, List<Person> aOptimal,
@@ -307,17 +341,13 @@ public class FairMatching {
 	
 	private void trimAllFeasiblePreferences(Matching manOptimalMatch, Matching womanOptimalMatch, 
 			int debugMask) {
-		//List<Person> men = menGroup; // groups.get(0);
-		//List<Person> women = womenGroup; // groups.get(1);
 		List<Person> menOptimal = manOptimalMatch.getMen();
 		List<Person> menPessimal = womanOptimalMatch.getWomen();
 		List<Person> womenOptimal = womanOptimalMatch.getWomen();
 		List<Person> womenPessimal = manOptimalMatch.getWomen();
-
 		
-//		PrintPrefPossible(men, women, menOptimal, menPessimal);
-//		PrintPrefPossible(women, men, womenOptimal, womenPessimal);
-		
+		System.out.println("Trimming Feasible Preferences for each gender, per man/woman optimal solutions...");
+			
 		trimFeasiblePreferencesByGender(menGroup, womenGroup, menOptimal, menPessimal, debugMask);
 		trimFeasiblePreferencesByGender(womenGroup, menGroup, womenOptimal, womenPessimal, debugMask);
 	}
@@ -328,9 +358,7 @@ public class FairMatching {
 		if (groupA.size() > 0) {
 			isMale = groupA.get(0).GetIsMale();
 		}
-		String gender = isMale ? "Males" : "Females";
-		System.out.println("Trimming Feasible Preferences by Gender");
-		System.out.println("Feasible Preferences for all " + gender);
+		
 		for (int personIndex = 0; personIndex < groupA.size(); personIndex++) {
 			Person person = groupA.get(personIndex);
 			Person optimalMatch = aOptimal.get(personIndex).getMatch();
@@ -340,6 +368,7 @@ public class FairMatching {
 			trimFeasiblePreferencesForIndividual(person, optimalMatchIndex, pessimalMatchIndex);
 			
 			if ((debugMask & (DEBUG_PRINT_FEASIBLE_RANGE | DEBUG_PRINT_PREF_LIST | DEBUG_PRINT_FEASIBLE_FROM_TRIM )) > 0 ) {
+				System.out.println("Feasible Preferences for all " + (isMale ? "Males" : "Females"));
 				String debugString = (isMale ? "M" : "F") + personIndex;
 				if ((debugMask & DEBUG_PRINT_FEASIBLE_RANGE) > 0) {
 					debugString += " Opt/Pess [ " + aOptimal.get(personIndex).getMatch().getPosition() +

@@ -36,6 +36,11 @@ public class Person implements Cloneable {
 		feasibleMatches.remove(index);
 	}
 
+	public boolean IsFeasible(Integer index)
+	{
+		return feasibleMatches.contains(index);
+	}
+	
 	public List<Integer> getFeasiblePreferences() {
 		return preferenceList.stream() //
 				.filter(i -> feasibleMatches.contains(i)) //
