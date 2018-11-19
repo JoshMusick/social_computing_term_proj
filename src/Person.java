@@ -62,10 +62,16 @@ public class Person implements Cloneable {
 		return preferenceList.indexOf(personA.position) < preferenceList.indexOf(personB.position);
 	}
 	
+	/**
+	 * Determines the index of person p in this person's preference list
+	 * @param p person to be identified in the preference list
+	 * @return index of person p in this preference list
+	 */
 	public int getPreferenceWeight(Person p) {
-		return preferenceList.indexOf(p);
+		int pos = p.getPosition();
+		return preferenceList.indexOf(pos);
 	}
-
+	
 	public int getPosition() {
 		return position;
 	}

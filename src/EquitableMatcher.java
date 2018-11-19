@@ -10,6 +10,14 @@ public class EquitableMatcher {
 	private Matching bestMatch = null;
 	private Integer numberOfMatchings = 0;
 	Set<List<Integer>> uniqueMatchings = new HashSet<List<Integer>>();
+	
+	public Matching GetBestMatching() {
+		return bestMatch;
+	}
+	
+	public Integer GetNumberOfMatchings() {
+		return numberOfMatchings;
+	}
 
 	public static void main(String[] args) {
 		if (args.length != 1) {
