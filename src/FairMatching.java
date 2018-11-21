@@ -225,11 +225,11 @@ public class FairMatching {
 		
 		System.out.println("-------------------");
 		
-		FindTotalFeasibleOptions(m);
+		StableMatchingUtils.FindTotalFeasibleOptions(m);
 		
 		SetStart();
 		
-		em.findAllMatchings(manOptimalMatch, false);
+		em.findAllMatchings(m, false);
 		
 		SetEnd();
 		
@@ -241,6 +241,7 @@ public class FairMatching {
 		long womanEquityScore = StableMatchingUtils.calculateEquityScore(womanOptimalMatch);
 		
 		if ((debugMask & DEBUG_DISPLAY_BEST_MATCHING) > 0) {
+			System.out.println("The Best match is:...");
 			Matching bestMatch = em.GetBestMatching();
 			StableMatchingUtils.printOutput(bestMatch, true);		
 		}
@@ -269,22 +270,6 @@ public class FairMatching {
 		}
 		
 		return m;
-	}
-	
-	public static void FindTotalFeasibleOptions(Matching match)
-	{
-		int cnt = 0;
-		List<Person> grp1 = match.getMen();
-		List<Person> grp2 = match.getWomen();
-		
-		for (Person p : grp1) {
-			cnt += p.getFeasiblePreferences().size();
-		}
-		
-		for (Person p : grp2) {
-			cnt += p.getFeasiblePreferences().size();
-		}
-		System.out.println("Total number of feasible options possible are " + cnt);
 	}
 	
 	private MatchingResult StoreMatchingResults(Matching bestMatch, Matching manOptMatch, Matching womanOptMatch, 
