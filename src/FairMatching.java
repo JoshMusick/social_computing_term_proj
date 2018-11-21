@@ -46,7 +46,7 @@ public class FairMatching {
 	public static final int DEBUG_PRINT_FEASIBLE_AFTER_MUTUAL_PREF_TRIM = 1 << 8; // Displays the feasible pref list after performing the mutual feasible trim
 	
 	public static final int DEBUG_PRINT_FEASIBLE_BEFORE_EQ_MATCHER = 1 << 9; // Displays the feasible pref list after doing the optimal / pessimal trim
-	
+	public static final int DEBUG_DISPLAY_BEST_MATCHING = 1 << 10; // display final matching
 	public static final int DEBUG_PRINT_ALL = 0xFFFFFFFF;
 		
 	
@@ -77,27 +77,18 @@ public class FairMatching {
 	public static void main(String[] args) {
 		// This will take a list of files, and run the algorithm on each of them
 		List<String> inputs = List.of(
-				"input.txt" 
-				, "input3.txt" 
-				, "input4.txt"
-				, "test3.txt"
-				, "test3.txt"
-				, "test3.txt"
-				, "test3.txt"
-				, "test3.txt"
-				, "test3.txt"
+			//	"input.txt" 
+			//	, "input3.txt" 
+			//	, "input4.txt"
+				"test_input_5.txt"
+			//	, "test3.txt"
 				);
 		
 		List<Integer> trimVals = List.of(
-				TRIM_ALL
-				, TRIM_ALL
-				, TRIM_ALL
-				, TRIM_ALL
-				, TRIM_ALL
-				, TRIM_MUTUAL_FEASIBLE
-				, TRIM_SINGLE_FEASIBLE
-				, TRIM_NONE
-				, TRIM_ALL
+		//		  TRIM_NONE
+		//		, TRIM_SINGLE_FEASIBLE
+		//		, TRIM_MUTUAL_FEASIBLE
+				 TRIM_ALL
 				);		
 		
 		
@@ -105,17 +96,32 @@ public class FairMatching {
 		
 		System.out.println("Starting Fair Matching...");
 		int index = 0;
-		for (String fileN : inputs) {
-			System.out.println("*************************************");
-			System.out.println("Loading input file " + fileN);
+		for (Integer trim : trimVals) {
 			
-			FairMatching fm = new FairMatching();
-			
-			MatchingResult res = fm.PerformMatching(fileN, trimVals.get(index), DEBUG_PRINT_NONE);	
-			System.out.println("*************************************");
-			index++;
-			results.add(res);
+			// This is running 10 iterations for averages
+			for (int i = 0; i < 2; ++i) {
+				for (String fileN : inputs) {
+					System.out.println("*************************************");
+					System.out.println("Loading input file " + fileN);
+					
+					FairMatching fm = new FairMatching();
+					
+					MatchingResult res = fm.PerformMatching(fileN, trim, 
+							//DEBUG_PRINT_NONE);
+							//DEBUG_PRINT_ALL);
+							DEBUG_PRINT_FEASIBLE_BEFORE_EQ_MATCHER | 
+							DEBUG_DISPLAY_BEST_MATCHING
+							);
+					//| DEBUG_PRINT_FEASIBLE_BEFORE_EQ_MATCHER );// DEBUG_PRINT_NONE);	
+					System.out.println("*************************************");
+					index++;
+					if (i != 0) {
+						results.add(res);	
+					}					
+				}				
+			}		
 		}
+		
 		System.out.println("*************************************");
 		
 		PrintResults(results);		
@@ -202,8 +208,27 @@ public class FairMatching {
 		}
 						
 		System.out.println("Starting Equitable Matcher ...");
-		SetStart();
+		
+		
+		
+		
 		EquitableMatcher em = new EquitableMatcher();
+		
+		
+		Matching m = CreateMatching(manOptimalMatch);
+		
+		System.out.println("-------------------");
+		
+		PrintMatching(m, "ManOptimal Matching - clone", false);
+		
+		PrintPrefPossible(m.getMen(), m.getWomen(), true);
+		
+		System.out.println("-------------------");
+		
+		FindTotalFeasibleOptions(m);
+		
+		SetStart();
+		
 		em.findAllMatchings(manOptimalMatch, false);
 		
 		SetEnd();
@@ -215,11 +240,51 @@ public class FairMatching {
 		long manEquityScore = StableMatchingUtils.calculateEquityScore(manOptimalMatch);
 		long womanEquityScore = StableMatchingUtils.calculateEquityScore(womanOptimalMatch);
 		
+		if ((debugMask & DEBUG_DISPLAY_BEST_MATCHING) > 0) {
+			Matching bestMatch = em.GetBestMatching();
+			StableMatchingUtils.printOutput(bestMatch, true);		
+		}
+		
+		
 		System.out.println("Man Optimal Equitable Score - " + manEquityScore + 
 				" :: Woman Optimal Equitable Score - " + womanEquityScore);
 		
 		return StoreMatchingResults(em.GetBestMatching(), manOptimalMatch, womanOptimalMatch, gs_time_ns, heuristic_time, equitable_time, trimMask );
 
+	}
+	
+	private Matching CreateMatching(Matching mOpt)
+	{
+		Matching m = new Matching(menGroup, womenGroup);
+		
+		List<Person> grp = mOpt.getMen();
+		for (Person p : grp) {		
+			int matIndx = p.getMatch().getPosition();
+			m.getMen().get(p.getPosition()).setMatch(m.getWomen().get(matIndx));
+		}
+		grp = mOpt.getWomen();
+		for (Person p : grp) {
+			int matIndx = p.getMatch().getPosition();
+			m.getWomen().get(p.getPosition()).setMatch(m.getMen().get(matIndx));
+		}
+		
+		return m;
+	}
+	
+	public static void FindTotalFeasibleOptions(Matching match)
+	{
+		int cnt = 0;
+		List<Person> grp1 = match.getMen();
+		List<Person> grp2 = match.getWomen();
+		
+		for (Person p : grp1) {
+			cnt += p.getFeasiblePreferences().size();
+		}
+		
+		for (Person p : grp2) {
+			cnt += p.getFeasiblePreferences().size();
+		}
+		System.out.println("Total number of feasible options possible are " + cnt);
 	}
 	
 	private MatchingResult StoreMatchingResults(Matching bestMatch, Matching manOptMatch, Matching womanOptMatch, 
@@ -406,11 +471,16 @@ public class FairMatching {
 		
 		
 	}
-
-	private void PrintPrefPossible(boolean printFullPrefs)
+	
+	public void PrintPrefPossible(List<Person> men, List<Person> women, boolean printFullPrefs) 
 	{
-		PrintGroupPrefPossible(menGroup, "M", printFullPrefs);
-		PrintGroupPrefPossible(womenGroup, "F", printFullPrefs);
+		PrintGroupPrefPossible(men, "M", printFullPrefs);
+		PrintGroupPrefPossible(women, "F", printFullPrefs);
+	}
+
+	public void PrintPrefPossible(boolean printFullPrefs)
+	{
+		PrintPrefPossible(menGroup, womenGroup, printFullPrefs);
 	}
 	
 	private void PrintGroupPrefPossible(List<Person> grp, String gend, boolean printFullPrefs)
@@ -426,7 +496,7 @@ public class FairMatching {
 	private void trimAllFeasiblePreferences(Matching manOptimalMatch, Matching womanOptimalMatch, 
 			int debugMask) {
 		List<Person> menOptimal = manOptimalMatch.getMen();
-		List<Person> menPessimal = womanOptimalMatch.getWomen();
+		List<Person> menPessimal = womanOptimalMatch.getMen();
 		List<Person> womenOptimal = womanOptimalMatch.getWomen();
 		List<Person> womenPessimal = manOptimalMatch.getWomen();
 		
@@ -447,9 +517,16 @@ public class FairMatching {
 			Person person = groupA.get(personIndex);
 			Person optimalMatch = aOptimal.get(personIndex).getMatch();
 			Person pessimalMatch = aPessimal.get(personIndex).getMatch();
-			Integer optimalMatchIndex = groupB.indexOf(optimalMatch);
-			Integer pessimalMatchIndex = groupB.indexOf(pessimalMatch);
-			trimFeasiblePreferencesForIndividual(person, optimalMatchIndex, pessimalMatchIndex);
+			
+			Integer optimalMatchPos = optimalMatch.getPosition();
+			Integer pessimalMatchPos = pessimalMatch.getPosition();
+			
+			
+			//Integer optimalMatchIndex = optimalMatch.getPosition();// groupB.indexOf(optimalMatch);
+			//Integer pessimalMatchIndex = pessimalMatch.getPosition();// groupB.indexOf(pessimalMatch);
+			trimFeasiblePreferencesForIndividual(person, optimalMatchPos, pessimalMatchPos);
+			
+			System.out.println(person.getPosition() + "--- Opt: " + optimalMatchPos + " Pess: " + pessimalMatchPos);
 			
 			if ((debugMask & (DEBUG_PRINT_FEASIBLE_RANGE | DEBUG_PRINT_PREF_LIST | DEBUG_PRINT_FEASIBLE_FROM_TRIM )) > 0 ) {
 				System.out.println("Feasible Preferences for all " + (isMale ? "Males" : "Females"));
@@ -471,17 +548,17 @@ public class FairMatching {
 		}
 	}
 	
-	private void trimFeasiblePreferencesForIndividual(Person person, Integer optimalMatchIndex,
-			Integer pessimalMatchIndex) {
+	private void trimFeasiblePreferencesForIndividual(Person person, Integer optimalMatch,
+			Integer pessimalMatch) {
 		boolean feasibleRange = false;
 		for (Integer preference : person.getPreferenceList()) {
-			if (preference.equals(optimalMatchIndex)) {
+			if (preference.equals(optimalMatch)) {
 				feasibleRange = true;
 			}
 			if (!feasibleRange) {
 				person.markInfeasible(preference);
 			}
-			if (preference.equals(pessimalMatchIndex)) {
+			if (preference.equals(pessimalMatch)) {
 				feasibleRange = false;
 			}
 		}

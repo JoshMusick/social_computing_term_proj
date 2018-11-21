@@ -39,12 +39,30 @@ public class EquitableMatcher {
 		removeNonFeasiblePairs(nonFeasiblePairs, manOptimalMatch);
 
 		StableMatchingUtils.printReducedPreferenceLists(manOptimalMatch);
-
+		
+		FindTotalFeasibleOptions(manOptimalMatch);
+		
 		findAllMatchings(manOptimalMatch, true);
 
 		printResults(manOptimalMatch, womanOptimalMatch);
 		
 		return numberOfMatchings;
+	}
+	
+	public static void FindTotalFeasibleOptions(Matching match)
+	{
+		int cnt = 0;
+		List<Person> grp1 = match.getMen();
+		List<Person> grp2 = match.getWomen();
+		
+		for (Person p : grp1) {
+			cnt += p.getFeasiblePreferences().size();
+		}
+		
+		for (Person p : grp2) {
+			cnt += p.getFeasiblePreferences().size();
+		}
+		System.out.println("Total number of feasible options possible are " + cnt);
 	}
 	
 	public void printResults(Matching manOptimalMatch, Matching womanOptimalMatch )
