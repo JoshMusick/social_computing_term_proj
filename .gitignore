@@ -1,3 +1,6 @@
+# test case files
+/tests/*.csv
+/tests/*.txt
 # Compiled class file
 *.class
 
