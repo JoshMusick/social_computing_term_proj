@@ -76,4 +76,55 @@ public class Matching implements Cloneable{
 		clone.setWomen(women);
 		return clone;
 	}
+	
+	/**
+	 * This function will determine if the feasible options of this are identical to "m"
+	 * @param m - Matching to be compared with this
+	 * @return - True if feasible matchings are identical for both men and women
+	 */
+	public boolean IsFeasibleSetEqual(Matching m) {
+	
+		List<Person> m1 = this.getMen();
+		List<Person> m2 = m.getMen();
+		
+		List<Person> w1 = this.getWomen();
+		List<Person> w2 = m.getWomen();
+		
+		if ((m1.size() != m2.size()) || (w1.size() != w2.size()) || (m1.size() != w1.size())) {
+			System.out.println("Group sizes are not equal");
+			return false;
+		}
+		
+		for (int i = 0; i < m1.size(); ++i) {
+			List<Integer> pref1 = m1.get(i).getFeasiblePreferences();
+			List<Integer> pref2 = m2.get(i).getFeasiblePreferences();
+			
+			if (pref1.size() != pref2.size()) {
+				System.out.println("Man preference feasible lists not equal for person " + i );
+				System.out.println("P1 has size " + pref1.size() + " and P2 has size " + pref2.size()); 
+				return false;
+			}
+			for (int j = 0; j < pref1.size(); ++j) {
+				if (!pref1.get(j).equals(pref2.get(j))) {
+					System.out.println("Man preference not equal for person " + i + " at pref " + j );
+					return false;
+				}
+			}
+			
+			pref1 = w1.get(i).getFeasiblePreferences();
+			pref2 = w2.get(i).getFeasiblePreferences();
+			
+			if (pref1.size() != pref2.size()) {
+				System.out.println("Woman preference feasible lists not equal for person " + i );
+				return false;
+			}
+			for (int j = 0; j < pref1.size(); ++j) {
+				if (!pref1.get(j).equals(pref2.get(j))) {
+					System.out.println("Woman preference not equal for person " + i + " at pref " + j );
+					return false;
+				}
+			}	
+		}		
+		return true;
+	}
 }

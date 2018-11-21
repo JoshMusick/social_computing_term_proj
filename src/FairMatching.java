@@ -80,8 +80,25 @@ public class FairMatching {
 			//	"input.txt" 
 			//	, "input3.txt" 
 			//	, "input4.txt"
-				"test_input_5.txt"
+			//	"test_input_5.txt"
 			//	, "test3.txt"
+			//	  "tests/test_10_1.txt"
+			//	, "tests/test_100_1.txt"
+			//	, "tests/test_100_2.txt"
+			//	, "tests/test_100_3.txt"
+			//	, "tests/test_100_4.txt"
+			//	, "tests/test_1000_1.txt"
+			//	, "tests/test_1000_2.txt"
+			//	, "tests/test_1000_3.txt"
+			//	, "tests/test_1000_4.txt"
+				 "tests/test_2000_1.txt"
+				, "tests/test_2000_2.txt"
+				, "tests/test_2000_3.txt"
+				, "tests/test_2000_4.txt"
+			//	  "tests/test_5000_1.txt"
+			//	, "tests/test_5000_2.txt"
+			//	, "tests/test_5000_3.txt"
+			//	, "tests/test_5000_4.txt"
 				);
 		
 		List<Integer> trimVals = List.of(
@@ -99,7 +116,7 @@ public class FairMatching {
 		for (Integer trim : trimVals) {
 			
 			// This is running 10 iterations for averages
-			for (int i = 0; i < 2; ++i) {
+			for (int i = 0; i < 5; ++i) {
 				for (String fileN : inputs) {
 					System.out.println("*************************************");
 					System.out.println("Loading input file " + fileN);
@@ -107,10 +124,10 @@ public class FairMatching {
 					FairMatching fm = new FairMatching();
 					
 					MatchingResult res = fm.PerformMatching(fileN, trim, 
-							//DEBUG_PRINT_NONE);
+							DEBUG_PRINT_NONE
 							//DEBUG_PRINT_ALL);
-							DEBUG_PRINT_FEASIBLE_BEFORE_EQ_MATCHER | 
-							DEBUG_DISPLAY_BEST_MATCHING
+							//DEBUG_PRINT_FEASIBLE_BEFORE_EQ_MATCHER | 
+							//DEBUG_DISPLAY_BEST_MATCHING
 							);
 					//| DEBUG_PRINT_FEASIBLE_BEFORE_EQ_MATCHER );// DEBUG_PRINT_NONE);	
 					System.out.println("*************************************");
@@ -206,26 +223,49 @@ public class FairMatching {
 			// Print the currently possible Preference pairs
 			PrintPrefPossible(printFullPreference);
 		}
-						
-		System.out.println("Starting Equitable Matcher ...");
 		
+		// Calculate the equity score here, before they get changed
+		long manEquityScore = StableMatchingUtils.calculateEquityScore(manOptimalMatch);
+		long womanEquityScore = StableMatchingUtils.calculateEquityScore(womanOptimalMatch);
 		
-		
-		
-		EquitableMatcher em = new EquitableMatcher();
-		
-		
+		// Create a local copy of a matching which includes the same feasibility set...
 		Matching m = CreateMatching(manOptimalMatch);
 		
-		System.out.println("-------------------");
+		System.out.println("Starting Equitable Matcher ...");
+						
+		Matching newUnPairedMatching = InputParserUtility.ParseInput(filename);
+			
+		EquitableMatcher em = new EquitableMatcher();
+		SetStart();
+		em.PruneNonFeasiblePairs(manOptimalMatch, womanOptimalMatch, true, false);		
+		SetEnd();
 		
-		PrintMatching(m, "ManOptimal Matching - clone", false);
+		long eqMatchPrune_time_ns = this.GetTimeNS();
+			
 		
-		PrintPrefPossible(m.getMen(), m.getWomen(), true);
+		boolean matchFeasibleIdentical = m.IsFeasibleSetEqual(manOptimalMatch);
+		if (matchFeasibleIdentical) {
+			System.out.println("+++++++++++++++++++++++++++++++++++");
+			System.out.println("M and man Optimal matching are equal");
+		} else {
+			System.out.println("+++++++++++++++++++++++++++++++++++");
+			System.out.println("M and man Optimal matching are NOT equal");
+		}
 		
-		System.out.println("-------------------");
-		
-		StableMatchingUtils.FindTotalFeasibleOptions(m);
+			
+		if ((debugMask & ( DEBUG_PRINT_FEASIBLE_BEFORE_EQ_MATCHER)) > 0) {
+			StableMatchingUtils.printReducedPreferenceLists(m);
+		}
+				
+		int feasibleCnt = StableMatchingUtils.FindTotalFeasibleOptions(m);
+		int feasibleCntEM = StableMatchingUtils.FindTotalFeasibleOptions(manOptimalMatch);
+		if (feasibleCnt != feasibleCntEM) {
+			System.out.println("+++++++++++++++++++++++++++++++++++");
+			System.out.println("+++++++++++++++++++++++++++++++++++");
+			System.out.println("Feasible Counts do not match!!!");
+			System.out.println("+++++++++++++++++++++++++++++++++++");
+			System.out.println("+++++++++++++++++++++++++++++++++++");
+		}		
 		
 		SetStart();
 		
@@ -234,11 +274,17 @@ public class FairMatching {
 		SetEnd();
 		
 		long equitable_time = GetTimeNS();
-				
-//		em.printResults(manOptimalMatch, womanOptimalMatch);
 		
-		long manEquityScore = StableMatchingUtils.calculateEquityScore(manOptimalMatch);
-		long womanEquityScore = StableMatchingUtils.calculateEquityScore(womanOptimalMatch);
+		long emFindMatch_time_NS = 0;
+		if (matchFeasibleIdentical) {
+			SetStart();
+			em.findAllMatchings(manOptimalMatch, false);
+			SetEnd();
+			emFindMatch_time_NS = GetTimeNS();
+		}
+		
+//		em.printResults(manOptimalMatch, womanOptimalMatch);
+
 		
 		if ((debugMask & DEBUG_DISPLAY_BEST_MATCHING) > 0) {
 			System.out.println("The Best match is:...");
@@ -250,7 +296,8 @@ public class FairMatching {
 		System.out.println("Man Optimal Equitable Score - " + manEquityScore + 
 				" :: Woman Optimal Equitable Score - " + womanEquityScore);
 		
-		return StoreMatchingResults(em.GetBestMatching(), manOptimalMatch, womanOptimalMatch, gs_time_ns, heuristic_time, equitable_time, trimMask );
+		return StoreMatchingResults(em.GetBestMatching(), manOptimalMatch, womanOptimalMatch, gs_time_ns,
+				heuristic_time, eqMatchPrune_time_ns, equitable_time, trimMask );
 
 	}
 	
@@ -273,7 +320,7 @@ public class FairMatching {
 	}
 	
 	private MatchingResult StoreMatchingResults(Matching bestMatch, Matching manOptMatch, Matching womanOptMatch, 
-			long GS_time_ns, long heur_time_ns, long equityTime_ns, int trimMask)
+			long GS_time_ns, long heur_time_ns, long eq_prune_ns, long equityTime_ns, int trimMask)
 	{
 		
 		int cnt = manOptMatch.men.size();
@@ -292,7 +339,7 @@ public class FairMatching {
 		System.out.println("For Woman Optimal - the man equity score is " + manWomanOpt + " and woman equity score is " + 
 				womanWomanOpt + " :: with a total equity score of " + (manWomanOpt + womanWomanOpt));
 		
-		MatchingResult res = new MatchingResult(cnt, GS_time_ns, heur_time_ns, equityTime_ns, m_filename);
+		MatchingResult res = new MatchingResult(cnt, GS_time_ns, heur_time_ns, eq_prune_ns, equityTime_ns, m_filename);
 		res.SetManValues(manManOpt, manWomanOpt, manEquit);
 		res.SetWomanValues(womanWomanOpt, womanManOpt, womanEquit);
 		res.SetTrimMask(trimMask);
@@ -511,7 +558,7 @@ public class FairMatching {
 			//Integer pessimalMatchIndex = pessimalMatch.getPosition();// groupB.indexOf(pessimalMatch);
 			trimFeasiblePreferencesForIndividual(person, optimalMatchPos, pessimalMatchPos);
 			
-			System.out.println(person.getPosition() + "--- Opt: " + optimalMatchPos + " Pess: " + pessimalMatchPos);
+			//System.out.println(person.getPosition() + "--- Opt: " + optimalMatchPos + " Pess: " + pessimalMatchPos);
 			
 			if ((debugMask & (DEBUG_PRINT_FEASIBLE_RANGE | DEBUG_PRINT_PREF_LIST | DEBUG_PRINT_FEASIBLE_FROM_TRIM )) > 0 ) {
 				System.out.println("Feasible Preferences for all " + (isMale ? "Males" : "Females"));

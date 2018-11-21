@@ -34,12 +34,12 @@ public class EquitableMatcher {
 		Matching manOptimalMatch = GaleShapelyAlgorithm.execute(unPairedMatching.clone(), "m");
 		Matching womanOptimalMatch = GaleShapelyAlgorithm.execute(unPairedMatching.clone(), "w");
 
+		PruneNonFeasiblePairs(manOptimalMatch, womanOptimalMatch, false, true);
 		// TODO: combine these into one method
-		List<List<Integer>> nonFeasiblePairs = findNonFeasiblePairs(manOptimalMatch, womanOptimalMatch);
-		removeNonFeasiblePairs(nonFeasiblePairs, manOptimalMatch);
+		//List<List<Integer>> nonFeasiblePairs = findNonFeasiblePairs(manOptimalMatch, womanOptimalMatch);
+		//removeNonFeasiblePairs(nonFeasiblePairs, manOptimalMatch);
 
 		StableMatchingUtils.printReducedPreferenceLists(manOptimalMatch);
-		
 		StableMatchingUtils.FindTotalFeasibleOptions(manOptimalMatch);
 		
 		findAllMatchings(manOptimalMatch, true);
@@ -47,6 +47,22 @@ public class EquitableMatcher {
 		printResults(manOptimalMatch, womanOptimalMatch);
 		
 		return numberOfMatchings;
+	}
+	
+	/** 
+	 * This function will calculate all non-feasible pairs based on the man-optimal and woman-optimal matchings
+	 * Then it will mark infeasible all options into the man-optimal matching.
+	 * @param manOpt - Man optimal matching
+	 * @param womanOpt - Woman optimal matching
+	 * @param pruneBoth - Flag to indicate both matchings should have infeasible pairs pruned
+	 */
+	public void PruneNonFeasiblePairs(Matching manOpt, Matching womanOpt, boolean pruneBoth, boolean printPrunedPairs)
+	{
+		List<List<Integer>> nonFeasiblePairs = findNonFeasiblePairs(manOpt, womanOpt);
+		removeNonFeasiblePairs(nonFeasiblePairs, manOpt, printPrunedPairs);
+		if (pruneBoth) {
+			removeNonFeasiblePairs(nonFeasiblePairs, womanOpt, printPrunedPairs);
+		}
 	}
 	
 
@@ -179,13 +195,15 @@ public class EquitableMatcher {
 		return result;
 	}
 
-	private void removeNonFeasiblePairs(List<List<Integer>> nonFeasiblePairs, Matching match) {
+	private void removeNonFeasiblePairs(List<List<Integer>> nonFeasiblePairs, Matching match, boolean printPrunedPairs) {
 		for (List<Integer> pair : nonFeasiblePairs) {
 			Integer manIndex = pair.get(0);
 			Integer womanIndex = pair.get(1);
 			Person man = match.getMen().get(manIndex);
 			Person woman = match.getWomen().get(womanIndex);
-			System.out.println("man: " + man.getPosition() + "woman: " + woman.getPosition());
+			if (printPrunedPairs) {
+				System.out.println("man: " + man.getPosition() + " woman: " + woman.getPosition());	
+			}			
 			man.markInfeasible(woman.getPosition());
 			woman.markInfeasible(man.getPosition());
 		}

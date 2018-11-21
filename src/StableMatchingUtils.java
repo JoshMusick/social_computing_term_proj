@@ -58,13 +58,15 @@ public class StableMatchingUtils {
 	}
 
 	public static void printReducedPreferenceLists(Matching groups) {
+		System.out.println("Man Reduced Preferences");
 		for (int i = 0; i < groups.getMen().size(); i++) {
 			Person p = groups.getMen().get(i);
-			System.out.println( i + " " + p.getFeasiblePreferences());
+			System.out.println( "M" + i + " " + p.getFeasiblePreferences());
 		}
+		System.out.println("Woman Reduced Preferences");
 		for (int i = 0; i < groups.getWomen().size(); i++) {
 			Person p = groups.getWomen().get(i);
-			System.out.println( i + " " + p.getFeasiblePreferences());
+			System.out.println( "W" + i + " " + p.getFeasiblePreferences());
 		}
 	}
 
@@ -99,7 +101,7 @@ public class StableMatchingUtils {
 		return preferenceListIndex.longValue();
 	}
 	
-	public static void FindTotalFeasibleOptions(Matching match)
+	public static int FindTotalFeasibleOptions(Matching match)
 	{
 		int cnt = 0;
 		List<Person> grp1 = match.getMen();
@@ -113,5 +115,6 @@ public class StableMatchingUtils {
 			cnt += p.getFeasiblePreferences().size();
 		}
 		System.out.println("Total number of feasible options possible are " + cnt);
+		return cnt;
 	}
 }

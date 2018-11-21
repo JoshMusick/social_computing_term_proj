@@ -10,15 +10,43 @@ import java.io.PrintWriter;
 public class InputGenerator {
 
 	public static void main(String[] args) {
-		//String generatedInput = generateRandomInput(Integer.valueOf(args[0]));
-		//System.out.println(generatedInput);
+		String generatedInput = generateRandomInput(Integer.valueOf(args[0]));
+		System.out.println(generatedInput);
 		
-		CreateRandomInput(10, 5);
-		System.out.println("**********************************************");
-		CreateRandomInput(100, 6);
-		System.out.println("**********************************************");
-		CreateRandomInput(1000, 7);
-		System.out.println("**********************************************");
+		if (false) {
+			CreateRandomInput(10, "tests/test_10_1");
+			System.out.println("**********************************************");
+			CreateRandomInput(100, "tests/test_100_1");
+			CreateRandomInput(100, "tests/test_100_2");
+			CreateRandomInput(100, "tests/test_100_3");
+			CreateRandomInput(100, "tests/test_100_4");
+			CreateRandomInput(100, "tests/test_100_5");
+			CreateRandomInput(100, "tests/test_100_6");
+			CreateRandomInput(100, "tests/test_100_7");
+			System.out.println("**********************************************");
+			CreateRandomInput(1000, "tests/test_1000_1");
+			CreateRandomInput(1000, "tests/test_1000_2");
+			CreateRandomInput(1000, "tests/test_1000_3");
+			CreateRandomInput(1000, "tests/test_1000_4");
+			System.out.println("**********************************************");
+				
+		}
+		if (false) {
+			CreateRandomInput(2000, "tests/test_2000_1");
+			CreateRandomInput(2000, "tests/test_2000_2");
+			CreateRandomInput(2000, "tests/test_2000_3");
+			CreateRandomInput(2000, "tests/test_2000_4");
+			System.out.println("**********************************************");	
+		}
+		
+		if (false) {
+			CreateRandomInput(5000, "tests/test_5000_1");
+			CreateRandomInput(5000, "tests/test_5000_2");
+			CreateRandomInput(5000, "tests/test_5000_3");
+			CreateRandomInput(5000, "tests/test_5000_4");
+			System.out.println("**********************************************");	
+		}
+		
 	}
 
 	public static String generateRandomInput(Integer pairs) {
@@ -40,7 +68,7 @@ public class InputGenerator {
 		return output;
 	}
 	
-	public static void CreateRandomInput(Integer numPairs, int num) {
+	public static void CreateRandomInput(Integer numPairs, String name) {
 		
 		
 		List<Integer> list = new ArrayList<Integer>();
@@ -55,8 +83,8 @@ public class InputGenerator {
 		PrintWriter pwPlain;
 		
         try {
-            pwCsv = new PrintWriter(new File("test_input_" + num + ".csv"));
-            pwPlain = new PrintWriter(new File("test_input_" + num + ".txt"));
+            pwCsv = new PrintWriter(new File(name + ".csv"));
+            pwPlain = new PrintWriter(new File(name + ".txt"));
  
             pwCsv.write(numPairs.toString());
             pwPlain.write(numPairs.toString());
