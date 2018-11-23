@@ -10,7 +10,9 @@
 \usepackage[normalem]{ulem}
 \usepackage{xcolor}
 \usepackage{wrapfig}
+\usepackage{setspace}
 
+\doublespacing
 
 \newtheorem{theorem}{Theorem}[section]
 \newtheorem{lemma}[theorem]{Lemma}
@@ -58,7 +60,7 @@
 \maketitle
 
 \begin{abstract}
-We explore the problem of finding an optimal stable marriage that considers the overall satisfaction of both men and women and present a reasonable solution to finding this optimal matching.
+We explore the problem of finding a stable matching that is `fair' in terms of overall satisfaction for both men and women. We present a polynomial time solution for efficiently traversing the set of all stable matchings and present details about our implementation. Finally, we discuss the results of our implementation with problem sets of various sizes.
 
 \end{abstract}
 
@@ -78,15 +80,19 @@ The Gale-Shapely algorithm is effective in finding a stable matching given any v
 \subsection{Fair Matching}
 The systematic bias that the Gale-Shapely algorithm applies toward the optimal group is clearly not optimized for fairness. How can we find a more equitable solution?
 
-First, it is important to define what property we are looking for in this solution. Let the function $score(p, m)$ be defined as the position of a person $p$'s assigned match $m$ in their preference list. So for example, if a man $M_1$ has the preference list [$W_3$, $W_1$, $W_4$, $W_2$], and ($M_1$, $W_3$) are matched in some matching, then score($M_1$, $W_3$) is $0$. Clearly, a lower individual score is better outcome for that individual.
+First, it is important to define what property we are looking for in this solution. Here, we will define the function $score(p, m)$ to be defined as the position of a person $p$'s assigned match $m$ in their preference list. For example, if a man $M_1$ has the preference list [$W_3$, $W_1$, $W_4$, $W_2$], and ($M_1$, $W_3$) are matched in some matching, then score($M_1$, $W_3$) is $0$. Clearly, a lower individual score is better outcome for that individual. This is the metric that we'll use to measure the satisfaction of an individual, and to determine 'fairness' of a matching among participants.
 
-One approach to finding a fair matching might be to find a stable matching where the sum of the scores for all men is closest to the sum of all scores for women. One might argue that this would be the most equitable arrangement because we would be minimizing the advantage of one gender over another in our matching.
+We considered two possible definitions of fair stable matching:
+\begin{itemize}
+    \item A matching that minimizes the distance between $score(M)$ and $score(W)$. The concept here is that we want to maximize fairness in terms of the outcome of the matching. We will call this the `balanced' fair matching.
+    \item A matching that maximizes overall satisfaction, irrespective of men or women. This matching could still produce an outcome that is more favorable to one gender than another, but will result in the overall higher level of satisfaction among the entire group of individuals. This matching is fair in the sense that the process used to generate the matching does not favor one gender over the other. We will refer to this as the `optimal' fair matching.
+\end{itemize}
 
-For example, suppose we have a stable marriage problem set where the man-optimal matching produces a cumulative score of 20 for the men and 30 for the women, and that the woman-optimal matching for the same set produces the opposite: a cumulative score of 20 for the women, but 30 for the men.  In either scenario, our overall cumulative score for these matchings are 50.
+We decided to go with the `optimal' fair matching definition. To illustrate why we took this approach, suppose we have a stable marriage problem set where the man-optimal matching produces a cumulative score of 20 for the men and 30 for the women, and that the woman-optimal matching for the same set produces the opposite: a cumulative score of 20 for the women, but 30 for the men.  In either scenario, our overall cumulative score for these matchings are 50.
 
 Now suppose that we have calculated all possible stable matchings for this set and we've scored them for men and women. Among these stable matchings, we find the one in which the score for the men and women is both 28. Clearly this is a more balanced solution, but is it better? The cumulative score for this balanced solution is 56, which overall is worse than either the man or woman optimal solution.
 
-But what if there were a matching that produced a mens' score of 25 and womens' score of 22? While this solution favors women, both genders are better off with this `optimal' solution than with the `balanced' solution. For this reason, our criteria for a fair matching is a matching that minimizes the total cumulative score for all participants of the matching. While this matching may turn out to be more favorable to one gender, it cannot be less balanced than one of the man/woman optimal matchings.
+But what if there were a matching that produced a mens' score of 25 and womens' score of 22? While this solution favors women, both genders in this scenario are better off with this `optimal' solution than with the `balanced' solution. While this matching may turn out to be more favorable to one gender, it cannot be less balanced than one of the man/woman optimal matchings.
 
 Finding this optimal solution is more challenging than finding the man-optimal or woman-optimal solution. It requires each possible stable matching to be evaluated.
 
