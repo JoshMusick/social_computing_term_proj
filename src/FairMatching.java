@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -55,12 +56,11 @@ public class FairMatching {
 	public static final int TRIM_SINGLE_FEASIBLE = 1 << 0; // If a man or woman has a single feasible option, trim all others from having them as an option
 	public static final int TRIM_MUTUAL_FEASIBLE = 1 << 1; // trim feasible options that are not mutual between all men and women
 	public static final int TRIM_ALL = TRIM_SINGLE_FEASIBLE | TRIM_MUTUAL_FEASIBLE;
-	
-	
-	
-	//private List<List<Person>> groups = List.of();
-	private List<Person> menGroup = List.of();
-	private List<Person> womenGroup = List.of();
+
+
+
+	private List<Person> menGroup = new ArrayList<Person>();
+	private List<Person> womenGroup = new ArrayList<Person>();
 	
 	/** 
 	 * This function will reset any class data, it is intended to be called before doing a new matching
@@ -69,14 +69,14 @@ public class FairMatching {
 	{
 		startTime = 0;
 		endTime = 0;
-		menGroup = List.of();
-		womenGroup = List.of();
+		menGroup = new ArrayList<Person>();
+		womenGroup = new ArrayList<Person>();
 		m_filename = "";
 	}
 
 	public static void main(String[] args) {
 		// This will take a list of files, and run the algorithm on each of them
-		List<String> inputs = List.of(
+		List<String> inputs = Arrays.asList(
 			//	"input.txt" 
 			//	, "input3.txt" 
 			//	, "input4.txt"
@@ -101,7 +101,7 @@ public class FairMatching {
 			//	, "tests/test_5000_4.txt"
 				);
 		
-		List<Integer> trimVals = List.of(
+		List<Integer> trimVals = Arrays.asList(
 		//		  TRIM_NONE
 		//		, TRIM_SINGLE_FEASIBLE
 		//		, TRIM_MUTUAL_FEASIBLE

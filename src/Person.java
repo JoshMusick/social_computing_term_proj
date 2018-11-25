@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -6,11 +7,11 @@ import java.util.stream.Collectors;
 
 public class Person implements Cloneable {
 
-	private List<Integer> preferenceList = List.of();
+	private List<Integer> preferenceList = new ArrayList<Integer>();
 	private Person match;
 	private Person lastRejected;
 	private int position;
-	private Set<Integer> feasibleMatches = Set.of();
+	private Set<Integer> feasibleMatches = new HashSet<Integer>();
 	
 	private boolean isMale;
 
