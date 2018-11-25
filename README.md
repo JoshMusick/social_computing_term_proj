@@ -1,5 +1,5 @@
 # social_computing_term_proj
-Term project for social computing. This branch implements a brute force algorithm to calculate an equitable stable matching. This is defined as the matching with a lowest cumulative 'equity score' for all participants in the matching, where an individual's equity score is the index of the individual's match in their preference list.
+Term project for social computing. This branch implements an algorithm to calculate the optimal stable matching based on the concept of Rotations presented in the Gusfield/Irving book and outlined in the included term project report. 'Optimal' is defined as the matching with a lowest cumulative 'equity score' for all participants in the matching, where an individual's equity score is the index of the individual's match in their preference list.
 
 To execute: compile the code and run with an 'inputFile' parameter. Ex:
 $> java EquitableMatcher input.txt
