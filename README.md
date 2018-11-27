@@ -1,15 +1,13 @@
 # Fair Stable Marriage - Social Computing Term Project Fall 2018
 Authors: Swapna Mukrappilly, Jason Trout, Zach Southwell, and Josh Musick
 
-Term project for social computing. This branch implements an algorithm to calculate the optimal stable matching based on the concept of Rotations presented in the Gusfield/Irving book and outlined in the included term project report. 'Optimal' is defined as the matching with a lowest cumulative 'equity score' for all participants in the matching, where an individual's equity score is the index of the individual's match in their preference list.
-
+This project implements an algorithm to calculate the optimal stable matching based on the concept of Rotations presented in the Gusfield/Irving book and outlined in the included term project report. 
+'Optimal' is defined as the matching with a lowest cumulative 'equity score' for all participants in the matching, where an individual's equity score is the index of the individual's match in their preference list.
 
 This repo contains the source code, test cases, and report documents for a Fair Stable Matching implementation of the Stable Marriage Problem.  This repo contains multiple programs.  One for generating randomized test cases, and another for taking a set of test cases and calculating the *fair* stable match.
 
-This project implements a number of heuristics and a rotation algorithm to calculate a fair stable matching. This is defined as the matching with a lowest cumulative 'fairness score' for all participants in the matching, where an individual's fairness score is the index of the individual's match in their preference list.
-
 ## Input Generator
-The input generator will create a randomized preference list in the format used for this course's previous homework problems.  The program takes 3 arguments, the number of men / women (n), the test case output filename, and the number of test cases to create using the first two settings.
+The input generator will create a randomized preference list in the format used for this course's previous homework problems.  The program takes 3 arguments, the number of men / women (n), the test case output filename root, and the number of test cases to create using the first two settings.
 
 The program would be ran as follows:
 
