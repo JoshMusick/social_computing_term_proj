@@ -10,6 +10,22 @@ import java.io.PrintWriter;
 public class InputGenerator {
 
 	public static void main(String[] args) {
+		
+		int len = args.length;
+		if (len != 3) {
+			System.out.println("Invalid arguments... Use the following args");
+			System.out.println("generator <num people> <filename root> <number of different inputs to create>");
+			return;
+		}
+		
+		Integer n = Integer.parseInt(args[0]);
+		String filenameRoot = args[1];
+		Integer num = Integer.parseInt(args[2]);
+		
+		CreateRandomTestCases(n, filenameRoot, num);
+		return;
+		
+		/*
 		String generatedInput = generateRandomInput(Integer.valueOf(args[0]));
 		System.out.println(generatedInput);
 		
@@ -46,7 +62,22 @@ public class InputGenerator {
 			CreateRandomInput(5000, "tests/test_5000_4");
 			System.out.println("**********************************************");	
 		}
-		
+		*/
+	}
+	
+	public static void CreateRandomTestCases(Integer n, String name_root, Integer numCases)
+	{
+		if (numCases <= 0) {
+			System.out.print("numCases must be > 0");
+		}
+		for (int i = 0; i < numCases; ++i) 
+		{
+			String name = name_root + (i+1);
+			System.out.println("Creating test case file " + name + " with n == " + n + "...");
+			
+			CreateRandomInput(n, name);
+			System.out.println(name + " created");
+		}
 	}
 
 	public static String generateRandomInput(Integer pairs) {

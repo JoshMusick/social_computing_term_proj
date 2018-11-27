@@ -83,22 +83,62 @@ public class FairMatching {
 			//	"test_input_5.txt"
 			//	, "test3.txt"
 			//	  "tests/test_10_1.txt"
-			//	, "tests/test_100_1.txt"
-			//	, "tests/test_100_2.txt"
-			//	, "tests/test_100_3.txt"
-			//	, "tests/test_100_4.txt"
+			/*	 "tests/test_100_1.txt"
+				, "tests/test_100_2.txt"
+				, "tests/test_100_3.txt"
+				, "tests/test_100_4.txt" */
 			//	, "tests/test_1000_1.txt"
 			//	, "tests/test_1000_2.txt"
 			//	, "tests/test_1000_3.txt"
 			//	, "tests/test_1000_4.txt"
-				 "tests/test_2000_1.txt"
-				, "tests/test_2000_2.txt"
-				, "tests/test_2000_3.txt"
-				, "tests/test_2000_4.txt"
+			//	 "tests/test_2000_1.txt"
+			//	, "tests/test_2000_2.txt"
+			//	, "tests/test_2000_3.txt"
+			//	, "tests/test_2000_4.txt"
 			//	  "tests/test_5000_1.txt"
 			//	, "tests/test_5000_2.txt"
 			//	, "tests/test_5000_3.txt"
 			//	, "tests/test_5000_4.txt"
+				  "tests/test_set_100_1.txt"
+				, "tests/test_set_100_2.txt"
+				, "tests/test_set_100_3.txt"
+				, "tests/test_set_100_4.txt"
+				, "tests/test_set_100_5.txt"
+				, "tests/test_set_100_6.txt"
+				, "tests/test_set_100_7.txt"
+				, "tests/test_set_100_8.txt"
+				, "tests/test_set_100_9.txt"
+				, "tests/test_set_100_10.txt"
+				, "tests/test_set_100_11.txt"
+				, "tests/test_set_100_12.txt"
+				, "tests/test_set_100_13.txt"
+				, "tests/test_set_100_14.txt"
+				, "tests/test_set_100_15.txt"
+				, "tests/test_set_100_16.txt"
+				, "tests/test_set_100_17.txt"
+				, "tests/test_set_100_18.txt"
+				, "tests/test_set_100_19.txt"
+				, "tests/test_set_100_20.txt" 
+			/*	  "tests/test_set_1000_1.txt"
+				, "tests/test_set_1000_2.txt"
+				, "tests/test_set_1000_3.txt"
+				, "tests/test_set_1000_4.txt"
+				, "tests/test_set_1000_5.txt"
+				, "tests/test_set_1000_6.txt"
+				, "tests/test_set_1000_7.txt"
+				, "tests/test_set_1000_8.txt"
+				, "tests/test_set_1000_9.txt"
+				, "tests/test_set_1000_10.txt"
+				, "tests/test_set_1000_11.txt"
+				, "tests/test_set_1000_12.txt"
+				, "tests/test_set_1000_13.txt"
+				, "tests/test_set_1000_14.txt"
+				, "tests/test_set_1000_15.txt"
+				, "tests/test_set_1000_16.txt"
+				, "tests/test_set_1000_17.txt"
+				, "tests/test_set_1000_18.txt"
+				, "tests/test_set_1000_19.txt"
+				, "tests/test_set_1000_20.txt" */
 				);
 		
 		List<Integer> trimVals = Arrays.asList(
@@ -108,6 +148,7 @@ public class FairMatching {
 				 TRIM_ALL
 				);		
 		
+		int numIters = 1;
 		
 		List<MatchingResult> results = new ArrayList<MatchingResult>();
 		
@@ -116,7 +157,7 @@ public class FairMatching {
 		for (Integer trim : trimVals) {
 			
 			// This is running 10 iterations for averages
-			for (int i = 0; i < 5; ++i) {
+			for (int i = 0; i < numIters; ++i) {
 				for (String fileN : inputs) {
 					System.out.println("*************************************");
 					System.out.println("Loading input file " + fileN);
@@ -132,7 +173,8 @@ public class FairMatching {
 					//| DEBUG_PRINT_FEASIBLE_BEFORE_EQ_MATCHER );// DEBUG_PRINT_NONE);	
 					System.out.println("*************************************");
 					index++;
-					if (i != 0) {
+					
+					if (numIters == 1 || i != 0) {
 						results.add(res);	
 					}					
 				}				
@@ -231,7 +273,7 @@ public class FairMatching {
 		// Create a local copy of a matching which includes the same feasibility set...
 		Matching m = CreateMatching(manOptimalMatch);
 		
-		System.out.println("Starting Equitable Matcher ...");
+		System.out.println("Starting Fair Matcher ...");
 						
 		Matching newUnPairedMatching = InputParserUtility.ParseInput(filename);
 			
@@ -242,7 +284,7 @@ public class FairMatching {
 		
 		long eqMatchPrune_time_ns = this.GetTimeNS();
 			
-		
+		/*
 		boolean matchFeasibleIdentical = m.IsFeasibleSetEqual(manOptimalMatch);
 		if (matchFeasibleIdentical) {
 			System.out.println("+++++++++++++++++++++++++++++++++++");
@@ -251,6 +293,7 @@ public class FairMatching {
 			System.out.println("+++++++++++++++++++++++++++++++++++");
 			System.out.println("M and man Optimal matching are NOT equal");
 		}
+		*/
 		
 			
 		if ((debugMask & ( DEBUG_PRINT_FEASIBLE_BEFORE_EQ_MATCHER)) > 0) {
@@ -276,12 +319,12 @@ public class FairMatching {
 		long equitable_time = GetTimeNS();
 		
 		long emFindMatch_time_NS = 0;
-		if (matchFeasibleIdentical) {
+		//if (matchFeasibleIdentical) {
 			SetStart();
 			em.findAllMatchings(manOptimalMatch, false);
 			SetEnd();
 			emFindMatch_time_NS = GetTimeNS();
-		}
+		//}
 		
 //		em.printResults(manOptimalMatch, womanOptimalMatch);
 

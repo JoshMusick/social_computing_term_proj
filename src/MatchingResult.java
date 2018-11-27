@@ -61,7 +61,7 @@ public class MatchingResult {
 	{
 		System.out.println("Legend:");
 		System.out.println("Num: Number of men / women in matching");
-		System.out.println("Trim-M: Trim Mask - 0: No trimming, 1: Single Feasible, 2: Mutual Feasible, 3: Single and Mutual Feasible");
+		//System.out.println("Trim-M: Trim Mask - 0: No trimming, 1: Single Feasible, 2: Mutual Feasible, 3: Single and Mutual Feasible");
 		System.out.println("M-Opt: Man Optimal Match -- Man Equitable Score (man optimal)");
 		System.out.println("W-Pes: Man Optimal Match -- Woman Equitable Score (woman pessimal)");
 		System.out.println("T-MO: Man Optimal Match -- Total Equitable Score (man + woman)");
@@ -72,20 +72,31 @@ public class MatchingResult {
 		System.out.println("M-Equ: Most Fair Match -- Man Equitable Score");
 		System.out.println("W-Equ: Most Fair Match -- Woman Equitable Score");
 		System.out.println("Tot EQ: Most Fair Match -- Total Equitable Score (man + woman)");
+		System.out.println("%OpM: Equitable Percent of Optimal - Man");
+		System.out.println("%OpW: Equitable Percent of Optimal - Woman");
+		
 		
 		System.out.println("GS(ms): Time to run Gale-Shapley for both man-optimal and woman-optimal solution in milliseconds");
 		System.out.println("Hu(ms): Time to run Heuristics in milliseconds");
 		System.out.println("GS(ms): Time to run Equitable Matching Pruning in milliseconds");
 		System.out.println("GS(ms): Time to run Equitable Matching in milliseconds");
 		System.out.println("-----------------------------------------------------------");
-		System.out.println("Num\tTrim-M\tM-Opt\tW-Pes\tT-MO\t|M-Pes\tW-Opt\tT-WO\t|M-Equ\tW-Equ\tTot EQ\t|GS(ms)\tHu(ms)\tEP(ms)\tEM(ms)");
+		System.out.println("Num\t|\tM-Opt\tW-Pes\tT-MO\t|\tM-Pes\tW-Opt\tT-WO\t|\tM-Equ\tW-Equ\tTot EQ\t|\t%OpM\t%OptW\t|\tGS(ms)\tHu(ms)\tEP(ms)\tEM(ms)");
 	}
 	
 	public void PrintData()
 	{
-		System.out.println(GetNumPeople() + "\t" + trimMask + "\t|" + man_opt_eq + "\t" + woman_pess_eq + "\t" + (man_opt_eq + woman_pess_eq) + "\t|" +
-				man_pess_eq + "\t" + woman_opt_eq + "\t" + (man_pess_eq + woman_opt_eq) + "\t|" + 
-				man_equit_sum + "\t" + woman_equit_sum + "\t" + (man_equit_sum + woman_equit_sum) + "\t|" + 
+		int mOptPer = (int)(1000.0 * (double)(man_equit_sum - this.man_opt_eq) / (double)(man_pess_eq - man_opt_eq));
+		int wOptPer = (int)(1000.0 * (double)(woman_equit_sum - this.woman_opt_eq) / (double)(woman_pess_eq - woman_opt_eq));
+		
+		// Prune the numbers reported to only include 4 digits...
+		float mOptPerf = (float) mOptPer / 1000.f;
+		float wOptPerf = (float) wOptPer / 1000.f;
+		
+		System.out.println(GetNumPeople() + "\t|\t" + man_opt_eq + "\t" + woman_pess_eq + "\t" + (man_opt_eq + woman_pess_eq) + "\t|\t" +
+				man_pess_eq + "\t" + woman_opt_eq + "\t" + (man_pess_eq + woman_opt_eq) + "\t|\t" + 
+				man_equit_sum + "\t" + woman_equit_sum + "\t" + (man_equit_sum + woman_equit_sum) + "\t|\t" + 
+				mOptPerf + "\t" + wOptPerf + "\t|\t" +
 				GetMS(gs_time_ns) + "\t" + GetMS(heuristic_time_ns) + "\t" + GetMS(equitable_prune_ns)  + "\t" + GetMS(equitable_time_ns));
 	}
 	
