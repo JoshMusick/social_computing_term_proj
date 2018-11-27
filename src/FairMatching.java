@@ -56,11 +56,12 @@ public class FairMatching {
 	public static final int TRIM_SINGLE_FEASIBLE = 1 << 0; // If a man or woman has a single feasible option, trim all others from having them as an option
 	public static final int TRIM_MUTUAL_FEASIBLE = 1 << 1; // trim feasible options that are not mutual between all men and women
 	public static final int TRIM_ALL = TRIM_SINGLE_FEASIBLE | TRIM_MUTUAL_FEASIBLE;
-
-
-
-	private List<Person> menGroup = new ArrayList<Person>();
-	private List<Person> womenGroup = new ArrayList<Person>();
+	
+	
+	
+	//private List<List<Person>> groups = List.of();
+	private List<Person> menGroup = List.of();
+	private List<Person> womenGroup = List.of();
 	
 	/** 
 	 * This function will reset any class data, it is intended to be called before doing a new matching
@@ -69,14 +70,48 @@ public class FairMatching {
 	{
 		startTime = 0;
 		endTime = 0;
-		menGroup = new ArrayList<Person>();
-		womenGroup = new ArrayList<Person>();
+		menGroup = List.of();
+		womenGroup = List.of();
 		m_filename = "";
 	}
+	
+	public static List<String> GenerateFileNames(String nameRoot, Integer numTests)
+	{
+		List<String> list = new ArrayList<String>();
+		
+		if (numTests <= 0) {
+			System.out.println("Number of tests must be > 0...");
+			return list;
+		}
+		
+		for (int i = 0; i < numTests; ++i) {
+			list.add(nameRoot + (i+1) + ".txt");
+		}
+		
+		return list;
+	}
 
+	// This should get args[0] = name root, args[1] = number of tests, args[2] = number of repeat runs for each test (optional)
 	public static void main(String[] args) {
+		
+		if (args.length < 2) {
+			System.out.println("Invalid Arguments");
+			System.out.println("Application requires an input file root name and number of tests to load... ie:");
+			System.out.println("FairMatching test/test_10_ 3");
+			return;
+		}
+		
+		Integer numIters = 1;
+		
+		Integer numTests = Integer.parseInt(args[1]);
+		if (args.length > 2) {
+			numIters = Integer.parseInt(args[2]);
+		}
+		List<String> inputs = GenerateFileNames(args[0], numTests );
+		
+		
 		// This will take a list of files, and run the algorithm on each of them
-		List<String> inputs = Arrays.asList(
+		//List<String> inputs = List.of(
 			//	"input.txt" 
 			//	, "input3.txt" 
 			//	, "input4.txt"
@@ -99,7 +134,7 @@ public class FairMatching {
 			//	, "tests/test_5000_2.txt"
 			//	, "tests/test_5000_3.txt"
 			//	, "tests/test_5000_4.txt"
-				  "tests/test_set_100_1.txt"
+			/*	  "tests/test_set_100_1.txt"
 				, "tests/test_set_100_2.txt"
 				, "tests/test_set_100_3.txt"
 				, "tests/test_set_100_4.txt"
@@ -118,7 +153,7 @@ public class FairMatching {
 				, "tests/test_set_100_17.txt"
 				, "tests/test_set_100_18.txt"
 				, "tests/test_set_100_19.txt"
-				, "tests/test_set_100_20.txt" 
+				, "tests/test_set_100_20.txt" */
 			/*	  "tests/test_set_1000_1.txt"
 				, "tests/test_set_1000_2.txt"
 				, "tests/test_set_1000_3.txt"
@@ -139,46 +174,36 @@ public class FairMatching {
 				, "tests/test_set_1000_18.txt"
 				, "tests/test_set_1000_19.txt"
 				, "tests/test_set_1000_20.txt" */
-				);
-		
-		List<Integer> trimVals = Arrays.asList(
-		//		  TRIM_NONE
-		//		, TRIM_SINGLE_FEASIBLE
-		//		, TRIM_MUTUAL_FEASIBLE
-				 TRIM_ALL
-				);		
-		
-		int numIters = 1;
+			//	);
+
 		
 		List<MatchingResult> results = new ArrayList<MatchingResult>();
 		
 		System.out.println("Starting Fair Matching...");
 		int index = 0;
-		for (Integer trim : trimVals) {
-			
-			// This is running 10 iterations for averages
-			for (int i = 0; i < numIters; ++i) {
-				for (String fileN : inputs) {
-					System.out.println("*************************************");
-					System.out.println("Loading input file " + fileN);
+		
+		for (int i = 0; i < numIters; ++i) {
+			for (String fileN : inputs) {
+				System.out.println("*************************************");
+				System.out.println("Loading input file " + fileN);
 					
-					FairMatching fm = new FairMatching();
+				FairMatching fm = new FairMatching();
 					
-					MatchingResult res = fm.PerformMatching(fileN, trim, 
-							DEBUG_PRINT_NONE
-							//DEBUG_PRINT_ALL);
-							//DEBUG_PRINT_FEASIBLE_BEFORE_EQ_MATCHER | 
-							//DEBUG_DISPLAY_BEST_MATCHING
-							);
-					//| DEBUG_PRINT_FEASIBLE_BEFORE_EQ_MATCHER );// DEBUG_PRINT_NONE);	
-					System.out.println("*************************************");
-					index++;
+				MatchingResult res = fm.PerformMatching(fileN, TRIM_ALL, 
+						DEBUG_PRINT_NONE
+						//DEBUG_PRINT_ALL);
+						//DEBUG_PRINT_FEASIBLE_BEFORE_EQ_MATCHER | 
+						//DEBUG_DISPLAY_BEST_MATCHING
+						);
+				//| DEBUG_PRINT_FEASIBLE_BEFORE_EQ_MATCHER );// DEBUG_PRINT_NONE);	
+				System.out.println("*************************************");
+				index++;
 					
-					if (numIters == 1 || i != 0) {
-						results.add(res);	
-					}					
-				}				
-			}		
+				//if (numIters == 1 || i != 0) {
+					results.add(res);	
+				//}					
+			}				
+					
 		}
 		
 		System.out.println("*************************************");
