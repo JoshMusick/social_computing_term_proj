@@ -50,41 +50,31 @@ To execute: compile the code and run with an 'inputFile' parameter. Ex:
 $> java EquitableMatcher input.txt
 ```
 
+This program will output the fairness / equitable scores for the man-optimal, woman-optimal, and fair matching, as well as the matching itself.
+
 ### FairMatching
 
 The FairMatching application is intended to run a batch of input files, perform some heuristic analysis and also perform the rotation algorithm for finding the fair matching.  It will then output the performance results of all the runs performed.
 
-To execute: compile he code and run it with the following parameters:
+To execute: compile the code and run it with the following parameters:
 ```
-$ java FairMatching .....
+$ java FairMatching <filename_root> <num_cases> <num_iterations (optional)>
 ```
 
+This application is expecting input files in a similar format as output by the InputGenerator.  Therefore, if you rset of files that you wish to run have the following filenames in the "tests" directory:
 
-The strategy for this algorithm is:
-1) Given the input file, build two lists of people(men and women) and populate their preference lists with the provided input values
+```
+test_input_1000_1.txt
+test_input_1000_2.txt
+test_input_1000_3.txt
+test_input_1000_4.txt
+test_input_1000_5.txt
+```
 
-2) Using the Gale-Shapely algorithm, calculate the man-optimal and woman-optimal matching.
+You would lauch the application with the following command:
+``` 
+$ java FairMatching tests/test_input_1000_ 5
+...
+```
 
-3) Use those matchings to filter out non-feasible matchings that occur at preference lists indices outside the range of the man-optimal and woman-optimal matches. For instance, given the input above, the 'feasible' range of matchings is reduced to this:
-
-man 1 preference list: [3, 1, 5, 4, 2] trimmed list: [5, 4, 2]
-man 2 preference list: [2, 4, 3, 1, 5] trimmed list: [3]
-man 3 preference list: [4, 5, 3, 1, 2] trimmed list: [4]
-man 4 preference list: [2, 5, 2, 1, 3] trimmed list: [2, 5]
-man 5 preference list: [3, 1, 2, 5, 4] trimmed list: [1]
-
-woman 1 preference list: [5, 2, 4, 3, 1] trimmed list: [5]
-woman 2 preference list: [3, 5, 1, 4, 2] trimmed list: [1, 4]
-woman 3 preference list: [2, 3, 5, 4, 1] trimmed list: [2]
-woman 4 preference list: [3, 4, 5, 1, 2] trimmed list: [3]
-woman 5 preference list: [4, 5, 3, 1, 2] trimmed list: [4, 5, 3, 1]
-
-Note that simply trimming down the list this way doesn't remove all of the infeasible values. For example, woman 5 can never be matched with man 3 or 5 because other women are always matched with those men. We should be able to improve execution times by filtering more values from these trimmed down lists.
-
-4) Recurse over all possible matchings. For each matching:
-	i) Determine whether the matching is stable (many matchings found this way are not stable)
-	ii) Calculate the score of the matching, maintaining a global copy of the matching that currently has the lowest score
-
-5) Output the optimal matching along with its 'equity score'.
-
-
+If you want run multiple iterations of each input file (for profiling / timing of a specific input), you can provide a third argument, which will indicate how many times each input should be "solved".
