@@ -233,10 +233,6 @@ The algorithm using rotations to traverse through the lattice of all stable matc
 
 This algorithm was able to calculate optimal matching much more efficiently and handled larger data sets. Still, traversing all possible matchings becomes more and more computationally expensive as the number of pairs grow to more than a thousand. The runtime to perform the rotation matching of large data sets is shown in Table~\ref{tab:resultTimes}. 
 
-(Also, one interesting thing I found is that as the number of pairs goes up, the cumulative score of the optimal match becomes much better than the cumulative score of either the man-optimal or woman-optimal matches. It may be interesting to see how the average equity score / average man/woman optimal score as a function of the number of pairs)
-
-(Another interesting idea, although I don't know if we have any space to discuss, is that you could just traverse down one chain of the lattice and maybe find a reasonably good option without necessarily having to traverse every matching in the lattice)
-
 \section{Results}
 
 As noted above, the brute-force strategy was initially tested, but proved to be too inefficient even on small input data sets, therefore we did not do any performance testing of that method.  However, we did find an alternate method for determining infeasible matchings in Gusfield Irving \cite{gusfield}, in conjunction with with the rotation method.  We implemented both and found the feasible preference list produced using our \emph{heuristics} and their \emph{Non-Feasible Prune} method was the same, but the runtime to generate the list was not the same.
